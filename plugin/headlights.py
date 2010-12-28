@@ -15,6 +15,19 @@ menus = []
 is_source_line = lambda x: re.match("^.*Last set from", x)
 sanitise_menu = lambda x: x.replace(" ", "\\ ").replace(".", "\\.").replace("|", "\\|")
 
+MODE_MAP = {
+    " ": "Normal, Visual, Select and Operator-pending",
+    "n": "Normal",
+    "v": "Visual and Select",
+    "s": "Select",
+    "x": "Visual",
+    "o": "Operator-pending",
+    "!": "Insert and Command-line",
+    "i": "Insert",
+    "l": ":lmap",
+    "c": "Command-line"
+}
+
 DEFAULT_SPILLOVER = "*."
 TRUNC_LIMIT = 20
 
@@ -27,11 +40,11 @@ def init_script(path):
 def get_spillover(name):
     # TODO: make sure that vim.vim plugins show up here (seems to load erratically)
     # for some reason, vimrc pattern matching fails with $ at the end
-    patterns = {r"^g?vimrc": "vim.", r"^\d": "0-9.", r"^[a-i]": "a-i.", r"^[j-r]": "j-r.", r"^[s-z]": "s-z."}
+    regexes = {r"^g?vimrc": "vim.", r"^\d": "0-9.", r"^[a-i]": "a-i.", r"^[j-r]": "j-r.", r"^[s-z]": "s-z."}
 
-    for pattern in patterns.keys():
-        if re.match(pattern, name.strip(), re.IGNORECASE):
-            return patterns.get(pattern)
+    for regex in regexes.keys():
+        if re.match(regex, name.strip(), re.IGNORECASE):
+            return regexes.get(regex)
 
     return DEFAULT_SPILLOVER
 
@@ -49,7 +62,8 @@ def gen_menu(root, spillover, threshhold):
         gen_commands_menu(menu_prefix, properties["commands"])
         gen_files_menu(menu_prefix, path)
         gen_mappings_menu(menu_prefix, properties["mappings"])
-        gen_autocmds_menu(menu_prefix, properties["autocmds"])
+        #gen_autocmds_menu(menu_prefix, properties["autocmds"])
+        gen_functions_menu(menu_prefix, properties["functions"])
         gen_help_menu(menu_prefix, name)
 
     menus.sort()
@@ -130,6 +144,19 @@ def gen_mappings_menu(menu_prefix, mappings):
 
         menus.append(mapping_item)
 
+# add functions
+def gen_functions_menu(menu_prefix, functions):
+    for function in functions:
+        function = trunc_function = sanitise_menu(function)
+
+        if (len(function) > TRUNC_LIMIT):
+            trunc_function = function[:TRUNC_LIMIT] + ">"
+
+        function_item = menu_prefix + "Functions." + trunc_function + "<Tab>" + function + " :" + "<cr>"
+
+        #print(function_item)
+        menus.append(function_item)
+
 # add autocmds
 def gen_autocmds_menu(menu_prefix, autocmds):
     for buffer, group, event, pattern, autocmd in autocmds:
@@ -156,6 +183,8 @@ def gen_autocmds_menu(menu_prefix, autocmds):
         menus.append(autocmd_item)
 
 # add help
+# TODO: change this so that it doesn't do a grep, but a simple search on the script name
+# this will be hit and miss, but whatever
 def gen_help_menu(menu_prefix, name):
     path_item = menu_prefix + "Help" + " :helpgrep " + name + "<cr>"
     menus.append(path_item)
@@ -192,15 +221,18 @@ def parse_scriptnames(scriptnames):
 
 # TODO: consider that some commands are local to the buffer, see how you'd handle reloading
 def parse_commands(commands):
-    for i, command in enumerate(commands[1:]):
-        command = command.strip()
+    # delete the listing header
+    commands = commands[1:]
+
+    for i, line in enumerate(commands):
+        line = line.strip()
 
         # begin with command lines
-        if not is_source_line(command):
-            pattern = r'''
+        if not is_source_line(line):
+            regex = r'''
             ^
             ([!"b]\s+)?                 # attribute
-            (\w+\s+)                    # name
+            (\w+\s+)                    # command
             ([01+?*]\s+)?               # args
             ((\.|1c|%|0c)\s+)?          # range
             ((dir|file|buffer)\s+)?     # complete
@@ -209,39 +241,27 @@ def parse_commands(commands):
             $
             '''
 
-            matches = re.findall(pattern, command, re.VERBOSE | re.IGNORECASE)
+            matches = re.findall(regex, line, re.VERBOSE | re.IGNORECASE)
 
-            try:
-                attribute, name, args, range, complete, label = \
-                    matches[0][0].strip(), \
-                    matches[0][1].strip(), \
-                    matches[0][2].strip(), \
-                    matches[0][3].strip(), \
-                    matches[0][5].strip(), \
-                    matches[0][7].strip()
-                #print(attribute, name, args, range, complete, definition)
+            #try:
+            attribute, command, args, range, complete, label = \
+                matches[0][0].strip(), \
+                matches[0][1].strip(), \
+                matches[0][2].strip(), \
+                matches[0][3].strip(), \
+                matches[0][5].strip(), \
+                matches[0][7].strip()
 
-            except (IndexError):
-                #print("%%% parse error: '" + command + "'")
-                pass
+            # get the source script from the next list item
+            source_script = get_source_script(commands[i+1])
 
-            try:
-                # get the source script from the next list item
-                # '2' because we skipped the header list item
-                source_script = get_source_script(commands[i+2])
-
-                source_script["commands"].append({name: label})
-
-            except (IndexError):
-                pass
+            source_script["commands"].append({command: label})
 
 def parse_mappings(mappings):
-    for i, mapping in enumerate(mappings):
-        #print("**************** %s" % mapping)
+    for i, line in enumerate(mappings):
         # begin with mapping lines
-        if not is_source_line(mapping):
-            # mode, mapping, command
-            pattern = r'''
+        if not is_source_line(line):
+            regex = r'''
             ^
             ([nvsxo!ilc]+)?    # mode
             \s+
@@ -253,67 +273,47 @@ def parse_mappings(mappings):
             $
             '''
 
-            matches = re.findall(pattern, mapping, re.VERBOSE | re.IGNORECASE)
+            matches = re.findall(regex, line, re.VERBOSE | re.IGNORECASE)
 
+            # TODO: consider doing something with the attribute
+            # TODO: this whole thing is complicated because there can be more than
+            # one mode for the same mapping.
+            # ISSUE: mappings with multiple modes in a mapping (eg. searchcomplete /) come through with
+            # a space value instead, so they appear as "Normal, Visual, Select, and Operator-pending", when in fact,
+            # they aren't.
+            mode, keys, attribute, command = \
+                matches[0][0].strip(), \
+                matches[0][1].strip(), \
+                matches[0][2].strip(), \
+                matches[0][3].strip()
+
+            # restore blank mode to original value (space)
+            if mode is "":
+                mode = " "
+
+            # delete anything preceding the first :
+            # TODO: test that this works
+            command = re.sub("^.*:", ":", command)
+
+            # cater for multiple modes
+            modes = list(mode)
+
+            # append mode descriptions
+            modes = [m + " - " + MODE_MAP.get(m) for m in modes]
+
+            # get the source script from the next list item
             try:
-                # TODO: consider doing something with the attribute
-                # TODO: this whole thing is complicated because there can be more than
-                # one mode for the same mapping.
-                # TODO: if there is more than one mode, split it up into an array
-                # and duplicate the mappings (maybe). it's a bit repetitive. but it
-                # would allow you to use mode names instead of just codes.
-                # TODO: the mapping with more than one mode (SearchComplete /) is coming through
-                # with a space for a mode instead. not good. no foreseeable way around this. issue.
-                mode, keys, attribute, command = \
-                    matches[0][0].strip(), \
-                    matches[0][1].strip(), \
-                    matches[0][2].strip(), \
-                    matches[0][3].strip()
-
-                # restore blank mode to original value (space)
-                if mode is "":
-                    mode = " "
-
-                # delete anything preceding the first :
-                # TODO: test that this works
-                command = re.sub("^.*:", ":", command)
-
-                # cater for multiple modes
-                modes = list(mode)
-
-                mode_map = {
-                        " ": "Normal, Visual, Select and Operator-pending",
-                        "n": "Normal",
-                        "v": "Visual and Select",
-                        "s": "Select",
-                        "x": "Visual",
-                        "o": "Operator-pending",
-                        "!": "Insert and Command-line",
-                        "i": "Insert",
-                        "l": ":lmap",
-                        "c": "Command-line"
-                }
-
-                modes = [m + " - " + mode_map.get(m) for m in modes]
-
-            except (IndexError):
-                #print("%%% parse error: '" + command + "'")
-                pass
-
-            try:
-                # get the source script from the next list item
                 source_script = get_source_script(mappings[i+1])
 
-                #if (len(modes) > 1):
-                    #print("######## ", modes, keys, command)
-
+                # add the mapping to the source script
                 for m in modes:
                     source_script["mappings"].append([m, keys, command])
 
-            except (IndexError, TypeError):
+            # handle mappings that don't have a source
+            except IndexError:
                 pass
 
-# TODO: improve this algorithm
+# TODO: this is quite broken. dodgy, slow algorithm. misses some autocmds. botches some patterns. fix.
 def parse_autocmds(autocmds):
     # delete the listing header
     autocmds = autocmds[1:]
@@ -349,40 +349,57 @@ def parse_autocmds(autocmds):
                         buffer = autocmds[pos].strip()
                         pos =+ 1      # move to the next line
 
-                    # the next line may be the source
+                    # handle cases where the source is the next line
                     if is_source_line(autocmds[pos+1]):
-                        # try to get the pattern (after the first 4 leading spaces)
-                        # if no pattern exists, default to pattern from previous autocmd
+                        regex = r'''
+                        ^
+                        \s{4}
+                        ([^\s]+)    # pattern
+                        \s+
+                        (.+)        # autocmd
+                        $
+                        '''
+
                         try:
-                            pattern, autocmd = re.findall("^\s{4}([^\s]+)\s+(.+)$", autocmds[pos])[0]
-                            pattern = pattern.strip()
+                            pattern, autocmd = re.findall(regex, autocmds[pos])[0]
+
+                        # handle autocmds with no pattern (defaults to pattern from previous autocmd)
                         except IndexError:
-                            #pattern = None
+                            pattern = "$"
                             autocmd = autocmds[pos]
 
                         source = autocmds[pos+1]
                         pos += 2
-                    # or the line after that
+
+                    # handle cases where the source is further down
                     else:
-                        pattern = autocmds[pos].strip()
+                        pattern = autocmds[pos]
                         autocmd = autocmds[pos+1]
                         source = autocmds[pos+2]
                         pos += 3
 
-                    try:
-                        # get the source script from the next list item
-                        source_script = get_source_script(source)
-                        source_script["autocmds"].append([buffer, group, event.strip(), pattern, autocmd.strip()])
+                    # get the source script
+                    source_script = get_source_script(source)
+                    source_script["autocmds"].append([buffer, group, event.strip(), pattern.strip(), autocmd.strip()])
 
-                    except (IndexError):
-                        pass
+def parse_functions(functions):
+    for i, line in enumerate(functions):
+        if not is_source_line(line):
+            function = line.split("function ")[1]
 
-def get_menu_commands(menu_root, spillover, threshhold, scriptnames, commands, mappings, autocmds):
-    print(mappings)
+            # get the source script from the next list item
+            source_script = get_source_script(functions[i+1])
+
+            # add the function to the source script
+            source_script["functions"].append(function)
+
+def get_menu_commands(menu_root, spillover, threshhold, scriptnames, commands, mappings, autocmds, functions, abbreviations):
     parse_scriptnames(scriptnames.strip().split("\n"))
     parse_commands(commands.strip().split("\n"))
     parse_mappings(mappings.strip().split("\n"))
     #parse_autocmds(autocmds.strip().split("\n"))
+    parse_functions(functions.strip().split("\n"))
+    #parse_abbreviations(abbreviations.strip().split("\n"))
 
     return gen_menu(menu_root, spillover, threshhold)
 

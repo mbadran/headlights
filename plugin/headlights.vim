@@ -1,3 +1,14 @@
+" Headlights is a Vim plugin to emulate Textmate's Bundles menu. It reveals
+" functionality of installed plugins,
+"to reveal details of installed plugins;
+" Headlights works by scraping Vim's internal commands
+" Issues: help menu needs to be improved -- look for text files via the o/s in the script's
+" directory.
+" some mappings aren't coming through correctly. a test mapping with multiple modes (searchcomplete) came through as a space
+" autocmd functionality is currently disabled -- too slow
+" TODO: abbreviations, functions, syntax (verbose syntax doesn't work, reveal
+" the file from the script directory)
+
 if has("gui_running")
   " NOTE: You may override the below default settings in your vimrc
 
@@ -7,6 +18,9 @@ if has("gui_running")
 
   " Categorise menu items alphabetically (1 to enable, 0 to disable)
   let g:headlights_spillover = 1
+
+  " The character limit after which characters are truncated
+  "let g:headlights_trunclimit = 20
 
   " The threshhold after which the menu is categorised
   let g:headlights_threshhold = 30
@@ -18,7 +32,6 @@ if has("gui_running")
   execute "amenu " . g:headlights_root . ".Reveal :"
 
   command! Shine call <SID>MakeMenu()
-
 endif
 
 function! l:GetCommandOutput(command)
@@ -58,13 +71,25 @@ timer_start = time.time()
 
 # TODO: test the error handling
 try:
+#    menu_commands = get_menu_commands(root=vim.eval("g:headlights_root"), \
+#        vim.eval(spillover="g:headlights_spillover"), \
+#        vim.eval(threshhold="g:headlights_threshhold"), \
+#        vim.eval(scriptnames="l:scriptnames"), \
+#        vim.eval(commands="l:commands"), \
+#        vim.eval(mappings="l:mappings"), \
+#        vim.eval(autocmds="l:autocmds"), \
+#        vim.eval(functions="l:functions"), \
+#        vim.eval(abbreviations="l:abbreviations"))
+
     menu_commands = get_menu_commands(vim.eval("g:headlights_root"), \
         vim.eval("g:headlights_spillover"), \
         vim.eval("g:headlights_threshhold"), \
         vim.eval("l:scriptnames"), \
         vim.eval("l:commands"), \
         vim.eval("l:mappings"), \
-        vim.eval("l:autocmds"))
+        vim.eval("l:autocmds"), \
+        vim.eval("l:functions"), \
+        vim.eval("l:abbreviations"))
 
     [vim.command(cmd) for cmd in menu_commands]
 
