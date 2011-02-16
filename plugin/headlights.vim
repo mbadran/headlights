@@ -1,20 +1,26 @@
 " Headlights is a Vim plugin to emulate Textmate's Bundles menu. It reveals
 " functionality of installed plugins,
-"to reveal details of installed plugins;
+
 " Headlights works by scraping Vim's internal commands
-" Issues: help menu needs to be improved -- look for text files via the o/s in the script's
+" TODO: help menu needs to be improved -- look for text files via the o/s in the script's
 " directory.
 " some mappings aren't coming through correctly. a test mapping with multiple modes (searchcomplete) came through as a space
-" autocmd functionality is currently disabled -- too slow
-" TODO: abbreviations, functions, syntax (verbose syntax doesn't work, reveal
-" the file from the script directory)
+" Issues: autocmd and functions() are currently disabled -- too slow
+" TODO: add a separate menu option for syntax (there's no way to relate those to scripts/plugins)
+" TODO: syntax (verbose syntax doesn't work, reveal the file from the script directory)
+" TODO: profile and troubleshoot slow spots
+" Issues: find a way around the command hack in .vimrc
+" TODO: test the error handling
+" TODO: write help file for headlights
+" TODO: maybe add vim runtime info (and other general info) to top of the menu, with a separator (&runtimepath)
+" TODO: add github issues for the issues
 
 if has("gui_running")
   " NOTE: You may override the below default settings in your vimrc
 
   " The menu root. If you don't want an extra menu, set this to the default
   " "Plugin" menu or a submenu thereof (eg. "Plugin.Headlights").
-  let g:headlights_root = "Bundles"
+  let g:headlights_root = "Bundle"
 
   " Categorise menu items alphabetically (1 to enable, 0 to disable)
   let g:headlights_spillover = 1
@@ -28,10 +34,23 @@ if has("gui_running")
   " A separator that precedes the menu (for eg. when reusing the "Plugin" menu)
   let g:headlights_topseparator = 0
 
-  " add a menu placeholder
-  execute "amenu " . g:headlights_root . ".Reveal :"
+  " enable this to debug any errors or performance issues. run the :messages
+  " command in Vim to find the location of the log file.
+  " IMPORTANT: set this to 0 when you're done, otherwise log files will be
+  " generated every time you load a Vim instance.
+  let g:headlights_debug = 0
 
-  command! Shine call <SID>MakeMenu()
+  let g:headlights_commands = 1
+  let g:headlights_mappings = 1
+  let g:headlights_abbreviations = 1
+  let g:headlights_functions = 0
+  let g:headlights_autocmds = 0
+
+  " add a menu placeholder
+  execute "amenu " . g:headlights_root . ".Reveal :call <SID>MakeMenu()<cr>"
+
+  " define menu command
+  command! HeadlightsTurnOn call <SID>MakeMenu()
 endif
 
 function! l:GetCommandOutput(command)
@@ -41,65 +60,82 @@ function! l:GetCommandOutput(command)
   return l:out
 endfunction
 
-function! s:MakeMenu()
-  let l:scriptnames = l:GetCommandOutput("scriptnames")
-  let l:commands = l:GetCommandOutput("command")
-  let l:mappings = l:GetCommandOutput("map")
-  let l:abbreviations = l:GetCommandOutput("abbreviate")
-  let l:functions = l:GetCommandOutput("function")
-  let l:autocmds = ""
+function! l:InitComponents()
+  " components are disabled by default
+  let s:commands = ""
+  let s:mappings = ""
+  let s:functions = ""
+  let s:abbreviations = ""
+  let s:autocmds = ""
 
-  if has("autocmd")
-    let l:autocmds = l:GetCommandOutput("autocmd")
+  let s:scriptnames = l:GetCommandOutput("scriptnames")
+
+  if (g:headlights_commands)
+    let s:commands = l:GetCommandOutput("command")
   endif
 
-  let l:scriptdir = matchlist(l:scriptnames, '\d\+:\s\+\([^ ]\+\)headlights.vim')[1]
+  if (g:headlights_mappings)
+    let s:mappings = l:GetCommandOutput("map")
+  endif
+
+  if (g:headlights_functions)
+    let s:functions = l:GetCommandOutput("function")
+  endif
+
+  if (g:headlights_abbreviations)
+    let s:abbreviations = l:GetCommandOutput("abbreviate")
+  endif
+
+  if (has("autocmd") && g:headlights_autocmds)
+    let s:autocmds = l:GetCommandOutput("autocmd")
+  endif
+endfunction
+
+function! s:MakeMenu()
+  call l:InitComponents()
+
+  " load assisting python script
+  let l:scriptdir = matchlist(s:scriptnames, '\d\+:\s\+\([^ ]\+\)headlights.vim')[1]
   execute "pyfile " . l:scriptdir . "headlights.py"
 
   " remove menu placeholder
   execute "aunmenu " . g:headlights_root . ".Reveal"
 
-  if (g:headlights_topseparator == 1)
+  " add menu separator (per global option)
+  if (g:headlights_topseparator)
     execute "amenu " . g:headlights_root . ".-Sep1- :"
   endif
 
-python << endpython
+  " local python kept intentionally minimal
+  python << endpython
 
 import vim, time
 
-timer_start = time.time()
+#timer_start = time.time()
 
-# TODO: test the error handling
+headlights = Headlights(
+    root=vim.eval("g:headlights_root"),
+    spillover=int(vim.eval("g:headlights_spillover")),
+    threshhold=int(vim.eval("g:headlights_threshhold")),
+    debug=bool(int(vim.eval("g:headlights_debug"))),
+    timer_start=time.time())
+
 try:
-#    menu_commands = get_menu_commands(root=vim.eval("g:headlights_root"), \
-#        vim.eval(spillover="g:headlights_spillover"), \
-#        vim.eval(threshhold="g:headlights_threshhold"), \
-#        vim.eval(scriptnames="l:scriptnames"), \
-#        vim.eval(commands="l:commands"), \
-#        vim.eval(mappings="l:mappings"), \
-#        vim.eval(autocmds="l:autocmds"), \
-#        vim.eval(functions="l:functions"), \
-#        vim.eval(abbreviations="l:abbreviations"))
+  log_name, menu_commands = headlights.get_menu_commands(
+      scriptnames=vim.eval("s:scriptnames"),
+      commands=vim.eval("s:commands"),
+      mappings=vim.eval("s:mappings"),
+      abbreviations=vim.eval("s:abbreviations"),
+      functions=vim.eval("s:functions"),
+      autocmds=vim.eval("s:autocmds"))
 
-    menu_commands = get_menu_commands(vim.eval("g:headlights_root"), \
-        vim.eval("g:headlights_spillover"), \
-        vim.eval("g:headlights_threshhold"), \
-        vim.eval("l:scriptnames"), \
-        vim.eval("l:commands"), \
-        vim.eval("l:mappings"), \
-        vim.eval("l:autocmds"), \
-        vim.eval("l:functions"), \
-        vim.eval("l:abbreviations"))
+  [vim.command(menu_cmd) for menu_cmd in menu_commands]
 
-    [vim.command(cmd) for cmd in menu_commands]
+  if log_name:
+      vim.command("echomsg('Headlights log file: %s')" % log_name)
 
-    timer_elapsed = (time.time() - timer_start)
-    timer_message = "Headlights python code executed in %.2f seconds." % timer_elapsed
-    vim.command("echomsg('" + timer_message + "')")
-
-except Exception, message:
-    error_message = "Headlights exception: %s" % message
-    vim.command("echoerr('" + error_message.replace("'", "\'") + "')")
+except Exception, e:
+    vim.command("echoerr(\"Headlights exception: %s\")" % str(e).replace("'", "\\'"))
     pass
 
 endpython
