@@ -1,4 +1,5 @@
 "Maps         : norm TheInitializationMap
 "function call : call s:Shine()
-function call : call Shine()
-"Command      : TheInitializationCommand
+"function call : call <SID>HeadlightsMakeMenu()
+Command      : execute "HeadlightsTurnOn"
+"execute "HeadlightsTurnOn"
