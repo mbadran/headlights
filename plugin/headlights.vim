@@ -1,7 +1,6 @@
-" Headlights is a Vim plugin to emulate Textmate's Bundles menu. It reveals
-" functionality of installed plugins,
+" Headlights is a Vim plugin that helps you manage your plugins (bundles). See
+" README.mkd for details.
 
-" Headlights works by scraping Vim's internal commands
 " TODO: help menu needs to be improved -- look for text files via the o/s in the script's
 " directory.
 " some mappings aren't coming through correctly. a test mapping with multiple modes (searchcomplete) came through as a space

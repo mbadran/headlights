@@ -3,7 +3,7 @@
 
 '''
 
-python helper script for headlights.vim
+Python helper script for headlights.vim. See README.mkd for details.
 
 '''
 
