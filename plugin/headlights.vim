@@ -1,22 +1,8 @@
 " Headlights is a Vim plugin that helps you manage your plugins (bundles). See
 " README.mkd for details.
 
-" TODO: help menu needs to be improved -- look for text files via the o/s in the script's
-" directory.
-" some mappings aren't coming through correctly. a test mapping with multiple modes (searchcomplete) came through as a space
-" Issues: autocmd and functions() are currently disabled -- too slow
-" TODO: add a separate menu option for syntax (there's no way to relate those to scripts/plugins)
-" TODO: syntax (verbose syntax doesn't work, reveal the file from the script directory)
-" TODO: profile and troubleshoot slow spots
-" Issues: find a way around the command hack in .vimrc
-" TODO: test the error handling
-" TODO: write help file for headlights
-" TODO: maybe add vim runtime info (and other general info) to top of the menu, with a separator (&runtimepath)
-" TODO: add github issues for the issues
-
+" NOTE: You may override the below default settings in your vimrc
 if has("gui_running")
-  " NOTE: You may override the below default settings in your vimrc
-
   " The menu root. If you don't want an extra menu, set this to the default
   " "Plugin" menu or a submenu thereof (eg. "Plugin.Headlights").
   let g:headlights_root = "Bundle"
