@@ -21,6 +21,7 @@ Here, have a [screenshot][].
 1. Download the source archive.
 
 2. Expand the source archive in your `.vim` dir
+
 3. Add the following line to your `.vimrc`:
 
     `execute "HeadlightsTurnOn"`
