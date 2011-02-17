@@ -25,6 +25,7 @@ if has("gui_running")
   " generated every time you load a Vim instance.
   let g:headlights_debug = 0
 
+  " NOTE: functions and autocmds are disabled until further notice
   let g:headlights_commands = 1
   let g:headlights_mappings = 1
   let g:headlights_abbreviations = 1
