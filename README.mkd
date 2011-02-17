@@ -14,7 +14,7 @@ Headlights works by scraping Vim's internal commands and using Python to generat
 
 Here, have a [screenshot][].
 
-## How to Use Headlights
+## Headlights: Turn On!
 
 1. Download the source archive.
 
@@ -34,7 +34,7 @@ Headlights is beta software and untested on some platforms. If you find any bugs
 
 In this version, plugin functions and autocmds are disabled for performance reasons. I'm working on it. See the [Issues][] for more details.
 
--- Mohammed Badran - mebadran AT gmail
+Any issues or feedback, email me on mebadran AT gmail
 
 [Vim]: http://www.vim.org/
 
