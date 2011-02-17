@@ -40,7 +40,7 @@ In this version, plugin functions and autocmds are disabled for performance reas
 
 [screenshot]: http://github.com/mbadran/headlights/screenshot.png
 
-[pathogen]: https://github.com/tpope/vim-pathogen/
+[pathogen]: http://www.vim.org/scripts/script.php?script_id=2332
 
 [pull requests]: http://help.github.com/forking/
 
