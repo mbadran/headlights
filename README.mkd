@@ -12,7 +12,7 @@ Challenge accepted!
 
 Headlights is a Vim plugin that helps you manage your plugins (bundles). It shows you the plugins you have installed, and reveals their associated commands, mappings, and script files. And it will only get better.
 
-Headlights works by scraping Vim's internal commands and using Python to piece everything together. (Tip: you need a version of Vim compiled with Python support.)
+Headlights works by scraping Vim's internal commands and using Python to generate the fancy menus. (Tip: you need a version of Vim compiled with Python support.)
 
 Here, have a [screenshot][].
 
