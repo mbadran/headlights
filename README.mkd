@@ -1,4 +1,4 @@
-# Headlights
+# What is Headlights?
 
 How many times have you installed a new [Vim][] plugin, only to realise that you had no idea how to use it? You probably had to dig up the help file, or Google a quick tutorial.
 
@@ -6,9 +6,7 @@ Do you even know what plugins you have installed right now, without digging arou
 
 Wouldn't it be nice to have a _Bundles_ menu, like Textmate, which gives you visibility over your plugins?
 
-Challenge accepted!
-
-## About
+## Challenge Accepted!
 
 Headlights is a Vim plugin that helps you manage your plugins (bundles). It shows you the plugins you have installed, and reveals their associated commands, mappings, and script files. And it will only get better.
 
@@ -16,11 +14,11 @@ Headlights works by scraping Vim's internal commands and using Python to generat
 
 Here, have a [screenshot][].
 
-## Installation
+## How to Use Headlights
 
 1. Download the source archive.
 
-2. Expand the source archive in your `.vim` dir
+2. Expand the source archive in your `.vim` dir (I trust you use [Pathogen][])
 
 3. Add the following line to your `.vimrc`:
 
@@ -30,21 +28,19 @@ Here, have a [screenshot][].
 
 4. Restart Vim
 
-## Issues
+## Known Issues
 
 Headlights is beta software and untested on some platforms. If you find any bugs or performance problems, please let me know and I'll do my best to fix them. I welcome any [pull requests][], so feel free to roll up your sleeves.
 
-In this version, plugin functions and autocmds are disabled for performance reasons. I'm working on it.
+In this version, plugin functions and autocmds are disabled for performance reasons. I'm working on it. See the [Issues][] for more details.
 
-See the [Issues][] for more details.
-
-## Contact
-
-Mohammed Badran - mebadran AT gmail
+-- Mohammed Badran - mebadran AT gmail
 
 [Vim]: http://www.vim.org/
 
 [screenshot]: http://github.com/mbadran/headlights/screenshot.png
+
+[pathogen]: https://github.com/tpope/vim-pathogen/
 
 [pull requests]: http://help.github.com/forking/
 
