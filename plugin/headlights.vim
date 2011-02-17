@@ -1,7 +1,8 @@
 " Headlights is a Vim plugin that helps you manage your plugins (bundles). See
 " README.mkd for details.
 
-" NOTE: You may override the below default settings in your vimrc
+" NOTE: You may override the below default settings in your vimrc (anything
+" with a 'g:' prefix
 if has("gui_running")
   " The menu root. If you don't want an extra menu, set this to the default
   " "Plugin" menu or a submenu thereof (eg. "Plugin.Headlights").
