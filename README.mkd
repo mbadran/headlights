@@ -1,6 +1,6 @@
 # What is Headlights?
 
-How many times have you installed a new [Vim][] plugin, only to realise that you had no idea how to use it? You probably had to dig up the help file, or Google a quick tutorial.
+How many times have you installed a new [Vim] [1] plugin, only to realise that you had no idea how to use it? You probably had to dig up the help file, or Google a quick tutorial.
 
 Do you even know what plugins you have installed right now, without digging around in your filesystem or running an obscure command?
 
@@ -12,13 +12,13 @@ Headlights is a Vim plugin that helps you manage your plugins (bundles). It show
 
 Headlights works by scraping Vim's internal commands and using Python to generate the fancy menus. (Tip: you need a version of Vim compiled with Python support.)
 
-Here, have a [screenshot][].
+Here, have a [screenshot] [2].
 
 ## Headlights: Turn On!
 
 1. Download the source archive.
 
-2. Expand the source archive in your `.vim` dir (I trust you use [Pathogen][])
+2. Expand the source archive in your `.vim` dir (I trust you use [Pathogen] [3]).
 
 3. Add the following line to your `.vimrc`:
 
@@ -26,22 +26,22 @@ Here, have a [screenshot][].
 
     (This step is necessary to allow all plugins to load before inspecting them.)
 
-4. Restart Vim
+4. Restart Vim.
 
 ## Known Issues
 
-Headlights is beta software and untested on some platforms. If you find any bugs or performance problems, please let me know and I'll do my best to fix them. I welcome any [pull requests][], so feel free to roll up your sleeves.
+Headlights is beta software and untested on some platforms. If you find any bugs or performance problems, please let me know and I'll do my best to fix them. I welcome any [pull requests] [4], so feel free to roll up your sleeves.
 
-In this version, plugin functions and autocmds are disabled for performance reasons. I'm working on it. See the [Issues][] for more details.
+In this version, plugin functions and autocmds are disabled for performance reasons. I'm working on it. See the [Issues] [5] for more details.
 
-Any issues or feedback, email me on mebadran AT gmail
+Any issues or feedback, email me on mebadran AT gmail.
 
-[Vim]: http://www.vim.org/
+[1]: http://www.vim.org/
 
-[screenshot]: http://github.com/mbadran/headlights/screenshot.png
+[2]: http://github.com/mbadran/headlights/screenshot.png
 
-[pathogen]: http://www.vim.org/scripts/script.php?script_id=2332
+[3]: http://www.vim.org/scripts/script.php?script_id=2332
 
-[pull requests]: http://help.github.com/forking/
+[3]: http://help.github.com/forking/
 
-[Issues]: https://github.com/mbadran/headlights/issues
+[4]: https://github.com/mbadran/headlights/issues
