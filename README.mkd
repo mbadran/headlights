@@ -38,10 +38,10 @@ Any issues or feedback, email me on mebadran AT gmail.
 
 [1]: http://www.vim.org/
 
-[2]: http://github.com/mbadran/headlights/screenshot.png
+[2]: https://github.com/mbadran/headlights/raw/master/headlights_ss.png
 
 [3]: http://www.vim.org/scripts/script.php?script_id=2332
 
-[3]: http://help.github.com/forking/
+[4]: http://help.github.com/forking/
 
-[4]: https://github.com/mbadran/headlights/issues
+[5]: https://github.com/mbadran/headlights/issues
