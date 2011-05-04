@@ -12,6 +12,7 @@ import os, re, platform, time, tempfile
 class Headlights:
     scripts = {}
     menus = []
+    timer_start = 0
 
     is_source_line = lambda self, x: re.match("^.*Last set from", x)
 
@@ -63,7 +64,6 @@ class Headlights:
         return DEFAULT_SPILLOVER
 
     def sanitise_path(self, path):
-        # TODO: test if this is actually necessary
         path = re.sub(r"^~", os.getenv("HOME"), path)
 
         path = os.path.normpath(path)
@@ -87,20 +87,24 @@ class Headlights:
 
             self.menu_prefix = "amenu " + self.menu_script_prefix
 
-            self.gen_commands_menu(properties["commands"], path)
-            self.gen_files_menu(path)
-            self.gen_mappings_menu(properties["mappings"])
-            # disabled until performance optimisation
-            #self.gen_autocmds_menu(properties["autocmds"])
-            #self.gen_functions_menu(properties["functions"])
-            self.gen_abbreviations_menu(properties["abbreviations"])
-            self.gen_help_menu(name)
-
-        self.menus.sort()
+            try:
+                self.gen_commands_menu(properties["commands"], path)
+                self.gen_files_menu(path)
+                self.gen_mappings_menu(properties["mappings"])
+                # disabled until performance optimisation
+                #self.gen_autocmds_menu(properties["autocmds"])
+                #self.gen_functions_menu(properties["functions"])
+                self.gen_abbreviations_menu(properties["abbreviations"])
+                self.gen_help_menu(name)
+            except IndexError:
+                # attempt to recover gracefully for now (not sure if this will work, hard to reproduce)
+                pass
 
         if self.debug:
             for menu in self.menus:
-                self.log_file.write("%s%c" % (menu, NEW_LINE))
+                self.log_file.write("%s%c" % (menu, self.NEW_LINE))
+
+        self.menus.sort()
 
     # add command menus
     def gen_commands_menu(self, commands, path):
@@ -608,9 +612,9 @@ class Headlights:
         log_name = None
 
         if self.debug:
-            self.log_file = tempfile.NamedTemporaryFile(prefix=LOGNAME_PREFIX, suffix=LOGNAME_SUFFIX, delete=False)
+            self.log_file = tempfile.NamedTemporaryFile(prefix=self.LOGNAME_PREFIX, suffix=self.LOGNAME_SUFFIX, delete=False)
             log_name = self.log_file.name
-            self.log_file.write("Headlights (Vim) log, %s.%c%c" % (time.ctime(), NEW_LINE, NEW_LINE))
+            self.log_file.write("Headlights (Vim) log, %s.%c%c" % (time.ctime(), self.NEW_LINE, self.NEW_LINE))
 
         self.parse_scriptnames(scriptnames.strip().split("\n"))
 
@@ -622,8 +626,8 @@ class Headlights:
         self.gen_menus()
 
         if self.debug:
-            timer_elapsed = time.time() - timer_start
-            self.log_file.write("%cHeadlights python code executed in %.2f seconds" % (NEW_LINE, timer_elapsed))
+            timer_elapsed = time.time() - self.timer_start
+            self.log_file.write("%cHeadlights python code executed in %.2f seconds" % (self.NEW_LINE, timer_elapsed))
             self.log_file.close()
 
         return log_name, self.menus
