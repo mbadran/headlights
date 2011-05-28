@@ -3,24 +3,23 @@
 
 '''
 
-Python helper script for headlights.vim. See README.mkd for details.
+Python helper script to generate menus for headlights.vim. See README.mkd for details.
 
 '''
 
 import os, re, platform, time, tempfile
 
 class Headlights:
-    scripts = {}
+    plugins = {}
     menus = []
-    timer_start = 0
 
-    is_source_line = lambda self, x: re.match("^.*Last set from", x)
+    is_source_line = lambda self, line: re.match("^.*Last set from", line)
 
-    # TODO: test if this is necessary
-    sanitise_menu = lambda self, x: x.replace(" ", "\\ ").replace(".", "\\.").replace("|", "\\|").replace("<", "\\<")
+    sanitise_menu = lambda self, menu: menu.replace("\\", "\\\\").replace(" ", "\\ ").replace(".", "\\.").replace("|", "\\|").replace("<", "\\<")
 
+    # modes and their descriptions
     MODE_MAP = {
-        "*": "Normal, Visual, Select, Operator-pending",
+        " ": "Normal, Visual, Select, Operator-pending",
         "n": "Normal",
         "v": "Visual and Select",
         "s": "Select",
@@ -32,37 +31,44 @@ class Headlights:
         "c": "Command-line"
     }
 
-    DEFAULT_SPILLOVER = "*."
+    # the limit after which a menu item is truncated
     TRUNC_LIMIT = 30
-    NEW_LINE = os.linesep
-    LOGNAME_PREFIX = "headlights_"
-    LOGNAME_SUFFIX = ".log"
 
-    def __init__(self, root, spillover, threshhold, debug, timer_start):
-        # initialise script settings
+    # initialises default settings
+    def __init__(self, root, spillover, threshhold, topseparator, debug, vim_timer):
         self.root = root
-        self.spillover = spillover
-        self.threshhold = threshhold
-        self.debug = debug
-        self.timer_start = timer_start
+        self.spillover = int(spillover)
+        self.threshhold = int(threshhold)
+        self.topseparator = bool(int(topseparator))
+        self.debug = bool(int(debug))
+        self.vim_timer = float(vim_timer)
+        self.python_timer = time.time()
 
-    def init_script(self, path):
+    # initialises new plugins (aka scripts/bundles)
+    def init_plugin(self, path):
         name = os.path.splitext(os.path.basename(path))[0]
-        self.scripts[path] = {"name": name, "commands": [], "mappings": [], "abbreviations": [], "functions": [], "autocmds": []}
+        self.plugins[path] = {"name": name, "commands": [], "mappings": [], "abbreviations": [], "functions": [], "autocmds": []}
 
-        return self.scripts[path]
+        return self.plugins[path]
 
-    def get_spillover(self, name):
-        # TODO: make sure that vim.vim plugins show up here (seems to load erratically)
-        # for some reason, 'vimrc' pattern matching fails with $ at the end
-        regexes = {r"^g?vimrc": "vim.", r"^\d": "0-9.", r"^[a-i]": "a-i.", r"^[j-r]": "j-r.", r"^[s-z]": "s-z."}
+    # returns the appropriate menu label
+    def get_spillover(self, name, path):
+        spillover = "*."
 
-        for regex in regexes.keys():
-            if re.match(regex, name.strip(), re.IGNORECASE):
-                return regexes.get(regex)
+        if re.match(r".*\/runtime\/.*", path, re.IGNORECASE):
+            # use an invisible separator (looks like a space) to move the menu to the bottom
+            spillover = "⁣runtime"
+        else:
+            regexes = {r"^g?vimrc": "⁣vimrc", r"^\d": "0 - 9", r"^[a-i]": "a - i", r"^[j-r]": "j - r", r"^[s-z]": "s - z"}
 
-        return DEFAULT_SPILLOVER
+            for regex in regexes.keys():
+                if re.match(regex, name.strip(), re.IGNORECASE):
+                    spillover = regexes.get(regex)
+                    break
 
+        return self.sanitise_menu(spillover) + "."
+
+    # sanitises a path so it can be accessed by vim
     def sanitise_path(self, path):
         path = re.sub(r"^~", os.getenv("HOME"), path)
 
@@ -73,310 +79,295 @@ class Headlights:
 
         return path
 
-    # add root menu
+    # adds the root menu and coordinates menu categories
     def gen_menus(self):
         menu_head = self.root + "."
 
-        for path, properties in self.scripts.items():
+        if self.topseparator:
+            topsep_priority = "100"
+            topsep_item = "amenu %s %s-Sep0- :" % (topsep_priority, menu_head)
+            self.menus.append(topsep_item)
+
+        for path, properties in self.plugins.items():
             name = self.sanitise_menu(properties["name"])
 
-            if self.spillover and len(self.scripts.keys()) > self.threshhold:
-                self.menu_script_prefix = menu_head + self.get_spillover(name) + name + "."
+            if self.spillover and len(self.plugins.keys()) > self.threshhold:
+                self.menu_script_prefix = menu_head + self.get_spillover(name, path) + name + "."
             else:
                 self.menu_script_prefix = menu_head + name + "."
 
-            self.menu_prefix = "amenu " + self.menu_script_prefix
+            # the help menu needs to be first so sorted() can get the script order right
+            self.gen_help_menu(name)
+            self.gen_commands_menu(properties["commands"], path)
+            self.gen_mappings_menu(properties["mappings"])
+            self.gen_files_menu(path)
+            self.gen_abbreviations_menu(properties["abbreviations"])
+            #disabled until autocmds are fixed
+            #self.gen_autocmds_menu(properties["autocmds"])
+            self.gen_functions_menu(properties["functions"])
 
-            try:
-                self.gen_commands_menu(properties["commands"], path)
-                self.gen_files_menu(path)
-                self.gen_mappings_menu(properties["mappings"])
-                # disabled until performance optimisation
-                #self.gen_autocmds_menu(properties["autocmds"])
-                #self.gen_functions_menu(properties["functions"])
-                self.gen_abbreviations_menu(properties["abbreviations"])
-                self.gen_help_menu(name)
-            except IndexError:
-                # attempt to recover gracefully for now (not sure if this will work, hard to reproduce)
-                pass
-
-        if self.debug:
-            for menu in self.menus:
-                self.log_file.write("%s%c" % (menu, self.NEW_LINE))
-
-        self.menus.sort()
-
-    # add command menus
+    # adds command menus
     def gen_commands_menu(self, commands, path):
-        sep_priority = "...30"
-        title_priority = "...40"
-        item_priority = "...50"
-
-        item_prefix = "amenu %s %s" % (item_priority, self.menu_script_prefix)
-
         if len(commands) > 0:
-            sep_item = "amenu %s %s-Sep1- :<cr>" % (sep_priority, self.menu_script_prefix)
+            sep_priority = "130"
+            title_priority = "140"
+            item_priority = "150"
+
+            sep_item = "amenu %s %s-Sep1- :" % (sep_priority, self.menu_script_prefix)
             self.menus.append(sep_item)
 
-            title_item = "amenu %s %sCommands :<cr>" % (title_priority, self.menu_script_prefix)
+            title_item = "amenu %s %sCommands :" % (title_priority, self.menu_script_prefix)
             self.menus.append(title_item)
-            title_item = "amenu disable %sCommands" % self.menu_script_prefix
-            self.menus.append(title_item)
+            disabled_item = "amenu disable %sCommands" % self.menu_script_prefix
+            self.menus.append(disabled_item)
 
-        for command in commands:
-            command_name = self.sanitise_menu(command.keys()[0]).replace("\\ ", " ")      # unescape spaces in commands
-            command_label = self.sanitise_menu(command[command.keys()[0]])
+            for command in commands:
+                # unescape spaces in commands
+                command_name = self.sanitise_menu(command.keys()[0]).replace("\\ ", " ")
+                command_label = self.sanitise_menu(command[command.keys()[0]])
 
-            # associate related mappings
-            mappings = self.scripts[path]["mappings"]
-            for mapping in mappings:
-                matches = re.findall("^:(.*)<cr>$", mapping[2], re.IGNORECASE)
-                if matches and matches[0] == command.keys()[0]:
-                    command_name += "\ (%s)" % mapping[1]
+                # associate related mappings
+                mappings = self.plugins[path]["mappings"]
+                for mapping in mappings:
+                    matches = re.findall("^:(.*)<cr>$", mapping[2], re.IGNORECASE)
+                    if matches and matches[0] == command.keys()[0]:
+                        command_name += "\ (%s)" % mapping[1]
 
-            command_item = item_prefix + command_name + "<Tab>:" + command_label + " :" + command_name + "<cr>"
-            self.menus.append(command_item)
+                command_item = "amenu %s %s%s<Tab>:%s :%s<cr>" % (item_priority, self.menu_script_prefix, command_name, command_label, command_name)
+                self.menus.append(command_item)
 
-    # add file menus
+    # adds file menus
+    # TODO: improve this. some files via :scriptnames aren't showing up. also, consider adding another piece of metatada: (script) parent -- if a script's parent is the beginning of another bundle's parent, then the first script should be included in the second's menu.
     def gen_files_menu(self, path):
-        sep_priority = "...90"
-        title_priority = "...100"
-        item_priority = "...110"
+        sep_priority = "190"
+        title_priority = "200"
+        item_priority = "210"
 
-        item_prefix_1 = "amenu %s.10 %s" % (item_priority, self.menu_script_prefix)
-        item_prefix_2 = "amenu %s.20 %s" % (item_priority, self.menu_script_prefix)
-        item_prefix_3 = "amenu %s.30 %s" % (item_priority, self.menu_script_prefix)
-        item_prefix_4 = "amenu %s.40 %s" % (item_priority, self.menu_script_prefix)
-        sep_prefix = "amenu %s.50 %s" % (item_priority, self.menu_script_prefix)
-        item_prefix_5 = "amenu %s.60 %s" % (item_priority, self.menu_script_prefix)
-        item_prefix_6 = "amenu %s.70 %s" % (item_priority, self.menu_script_prefix)
-        item_prefix_7 = "amenu %s.80 %s" % (item_priority, self.menu_script_prefix)
-        item_prefix_8 = "amenu %s.90 %s" % (item_priority, self.menu_script_prefix)
-        item_prefix_9 = "amenu %s.100 %s" % (item_priority, self.menu_script_prefix)
-
-        sep_item = "amenu %s %s-Sep3- :<cr>" % (sep_priority, self.menu_script_prefix)
+        sep_item = "amenu %s %s-Sep3- :" % (sep_priority, self.menu_script_prefix)
         self.menus.append(sep_item)
 
-        title_item = "amenu %s %sFiles :<cr>" % (title_priority, self.menu_script_prefix)
+        title_item = "amenu %s %sFiles :" % (title_priority, self.menu_script_prefix)
         self.menus.append(title_item)
-        title_item = "amenu disable %sFiles" % self.menu_script_prefix
-        self.menus.append(title_item)
+        disabled_item = "amenu disable %sFiles" % self.menu_script_prefix
+        self.menus.append(disabled_item)
 
         file_path = self.sanitise_menu(path)
         dir_path = self.sanitise_menu(os.path.dirname(path))
         trunc_file_path = "<" + file_path[-self.TRUNC_LIMIT:]
 
-        path_item = item_prefix_1 + trunc_file_path + ".Edit\ here<Tab>:edit\ " + file_path + " :edit " + file_path + "<cr>"
-        self.menus.append(path_item)
+        # make the file appear in the "File > Open Recent" menu
+        # also, honour the "Open files from applications" setting
+        if platform.system() == "Darwin":
+            open_cmd = "silent !open -a MacVim"
+            reveal_cmd = "silent !open"
+        elif platform.system() == "Windows":
+            open_cmd = "silent !start gvim.exe"
+            reveal_cmd = "silent !start"
+        # TODO: handle linux
+        else:
+            open_cmd = "edit"
+            reveal_cmd = ""
 
-        path_item = item_prefix_2 + trunc_file_path + ".Edit\ in\ horizontal\ split<Tab>:split\ " + file_path + " :split " + file_path + "<cr>"
-        self.menus.append(path_item)
+        open_item = "amenu %s.10 %s%s.Open\ File<Tab>%s :%s %s<cr>" % (item_priority, self.menu_script_prefix, trunc_file_path, file_path, open_cmd, file_path)
+        self.menus.append(open_item)
 
-        path_item = item_prefix_3 + trunc_file_path + ".Edit\ in\ vertical\ split<Tab>:vsplit\ " + file_path + " :vsplit " + file_path + "<cr>"
-        self.menus.append(path_item)
+        # unescape full stops
+        explore_item = "amenu %s.20 %s%s.Explore\ in\ Vim<Tab>%s :Explore %s<cr>" % (item_priority, self.menu_script_prefix, trunc_file_path, dir_path, dir_path.replace("\\.", "."))
+        self.menus.append(explore_item)
 
-        path_item = item_prefix_4 + trunc_file_path + ".Edit\ in\ new\ tab<Tab>:tabnew\ " + file_path + " :tabnew " + file_path + "<cr>"
-        self.menus.append(path_item)
+        if reveal_cmd:
+            reveal_item = "amenu %s.30 %s%s.Explore\ in\ System<Tab>%s :%s %s<cr>" % (item_priority, self.menu_script_prefix, trunc_file_path, dir_path, reveal_cmd, dir_path)
+            self.menus.append(reveal_item)
 
-        sep_item = item_prefix_5 + trunc_file_path + ".-Sep1- :<cr>"
+    # adds mapping menus
+    def gen_mappings_menu(self, mappings):
+        if len(mappings) > 0:
+            sep_priority = "160"
+            title_priority = "170"
+            item_priority = "180"
+
+            sep_item = "amenu %s %s-Sep2- :" % (sep_priority, self.menu_script_prefix)
+            self.menus.append(sep_item)
+
+            title_item = "amenu %s %sMappings :" % (title_priority, self.menu_script_prefix)
+            self.menus.append(title_item)
+            disabled_item = "amenu disable %sMappings" % self.menu_script_prefix
+            self.menus.append(disabled_item)
+
+            for mode, keys, command in mappings:
+                mode = self.sanitise_menu(mode)
+                keys = self.sanitise_menu(keys)
+                command = self.sanitise_menu(command)
+
+                mapping_item = "amenu %s %s%s.%s<Tab>%s :<cr>" % (item_priority, self.menu_script_prefix, mode, keys, command)
+                self.menus.append(mapping_item)
+                disabled_item = "amenu disable %s%s.%s" % (self.menu_script_prefix, mode, keys)
+                self.menus.append(disabled_item)
+
+    # adds autocmd menus
+    def gen_autocmds_menu(self, autocmds):
+        if len(autocmds) > 0:
+            sep_priority = "250"
+            title_priority = "260"
+            item_priority = "270"
+
+            sep_item = "amenu %s %s-Sep5- :" % (sep_priority, self.menu_script_prefix)
+            self.menus.append(sep_item)
+
+            # TODO: remove item_prefix as in the other menu categories
+            item_prefix = "amenu %s %s" % (item_priority, self.menu_script_prefix)
+
+            title_item = "amenu %s %sAutocmds :" % (title_priority, self.menu_script_prefix)
+            self.menus.append(title_item)
+            disabled_item = "amenu disable %sAutocmds" % self.menu_script_prefix
+            self.menus.append(disabled_item)
+
+            for buffer, group, event, pattern, autocmd in autocmds:
+                autocmd = trunc_autocmd = self.sanitise_menu(autocmd)
+
+                if (len(autocmd) > self.TRUNC_LIMIT):
+                    trunc_autocmd = autocmd[:self.TRUNC_LIMIT] + ">"
+
+                autocmd_item = item_prefix
+
+                if buffer:
+                    autocmd_item += self.sanitise_menu(buffer) + "."
+
+                if group:
+                    autocmd_item += self.sanitise_menu(group) + "."
+
+                autocmd_item += self.sanitise_menu(event) + "."
+
+                if pattern:
+                    autocmd_item += self.sanitise_menu(pattern) + "."
+
+                item_prefix = "amenu %s %s" % (item_priority, self.menu_script_prefix)
+                autocmd_item += trunc_autocmd + "<Tab>" + autocmd + " :" + "<cr>"
+
+                self.menus.append(autocmd_item)
+
+    # adds function menus
+    def gen_functions_menu(self, functions):
+        if len(functions) > 0:
+            sep_priority = "280"
+            item_priority = "290"
+
+            sep_item = "amenu %s %s-Sep6- :" % (sep_priority, self.menu_script_prefix)
+            self.menus.append(sep_item)
+
+            for function in functions:
+                function = trunc_function = self.sanitise_menu(function)
+
+                # only show a label if the function name is truncated
+                if (len(function) > self.TRUNC_LIMIT):
+                    trunc_function = function[:self.TRUNC_LIMIT] + ">"
+                else:
+                    function = ""
+
+                function_item = "amenu %s %sFunctions.%s<Tab>%s :<cr>" % (item_priority, self.menu_script_prefix, trunc_function, function)
+                self.menus.append(function_item)
+                disabled_item = "amenu disable %sFunctions.%s" % (self.menu_script_prefix, trunc_function)
+                self.menus.append(disabled_item)
+
+    # adds abbreviation menus
+    def gen_abbreviations_menu(self, abbreviations):
+        if len(abbreviations) > 0:
+            sep_priority = "220"
+            title_priority = "230"
+            item_priority = "240"
+
+            sep_item = "amenu %s %s-Sep4- :" % (sep_priority, self.menu_script_prefix)
+            self.menus.append(sep_item)
+
+            title_item = "amenu %s %sAbbreviations :" % (title_priority, self.menu_script_prefix)
+            self.menus.append(title_item)
+            disabled_item = "amenu disable %sAbbreviations" % self.menu_script_prefix
+            self.menus.append(disabled_item)
+
+            for mode, expression, lhs, rhs in abbreviations:
+                lhs = trunc_lhs = self.sanitise_menu(lhs)
+                mode = self.sanitise_menu(mode)
+
+                if (len(lhs) > self.TRUNC_LIMIT):
+                    trunc_lhs = lhs[:self.TRUNC_LIMIT] + ">"
+
+                if not expression:
+                    expression = ""
+
+                # TODO: test expressions
+                #if expression:
+                    #expression = "<expr>: "
+                #else:
+                    #expression = ""
+
+                abbr_item = "amenu %s %s%s.%s<Tab>%s%s :<cr>" % (item_priority, self.menu_script_prefix, mode, trunc_lhs, expression, rhs)
+                self.menus.append(abbr_item)
+                disabled_item = "amenu disable %s%s.%s" % (self.menu_script_prefix, mode, trunc_lhs)
+                self.menus.append(disabled_item)
+
+    # adds help menus
+    def gen_help_menu(self, name):
+        title_priority = "110"
+        help_priority = "120"
+
+        title_item = "amenu %s %sHelp :" % (title_priority, self.menu_script_prefix)
+        self.menus.append(title_item)
+        disabled_item = "amenu disable %sHelp" % self.menu_script_prefix
+        self.menus.append(disabled_item)
+
+        help_item = "amenu %s %sDoc<Tab>help\ %s :help %s<cr>" % (help_priority, self.menu_script_prefix, name, name)
+        self.menus.append(help_item)
+
+        help_item = "amenu %s %sOccurrences<Tab>helpgrep\ %s :exec 'helpgrep %s' \| copen<cr>" % (help_priority, self.menu_script_prefix, name, name)
+        self.menus.append(help_item)
+
+    # adds debug menus
+    def gen_debug_menu(self, log_name):
+        sep_priority = "300"
+        open_priority = "310"
+        sexplore_priority = "320"
+        explore_priority = "330"
+
+        sep_item = "amenu %s %s.-SepX- :" % (sep_priority, self.root)
         self.menus.append(sep_item)
 
-        # the only supported platforms are Unix and variants (by default) and Windows
-        if (str.lower(platform.system()).startswith("Win")):
-            path_item = item_prefix_6 + trunc_file_path + ".Explore\ in\ system\ browser<Tab>:silent\ !start\ explorer\ " + dir_path + " :silent !start " + dir_path + "<cr>"
+        if platform.system() == "Darwin":
+            open_log_cmd = "silent !open -a MacVim"
+            reveal_log_cmd = "silent !open"
+        elif platform.system() == "Windows":
+            open_log_cmd = "silent !start gvim.exe"
+            reveal_log_cmd = "silent !start"
         else:
-            path_item = item_prefix_6 + trunc_file_path + ".Explore\ in\ system\ browser<Tab>:silent\ !open\ " + dir_path + " :silent !open " + dir_path + "<cr>"
-        self.menus.append(path_item)
+            open_log_cmd = "edit"
+            reveal_log_cmd = ""
 
-        #path_item = item_prefix + trunc_file_path + ".Explore\ in\ horizontal\ split<Tab>:Explore\ " + dir_path + " :Explore " + dir_path + "<cr>"
-        #self.menus.append(path_item)
+        debug_item = "amenu %s %s.debug.Open\ Log<Tab>%s :%s %s<cr>" % (open_priority, self.root, self.sanitise_menu(log_name), open_log_cmd, log_name)
+        self.menus.append(debug_item)
 
-        #path_item = item_prefix + trunc_file_path + ".Explore\ in\ vertical\ split<Tab>:Explore!\ " + dir_path + " :Explore! " + dir_path + "<cr>"
-        #self.menus.append(path_item)
+        debug_item = "amenu %s %s.debug.Explore\ in\ Vim<Tab>%s :Explore %s<cr>" % (sexplore_priority, self.root, os.path.dirname(log_name), os.path.dirname(log_name))
+        self.menus.append(debug_item)
 
-        # unescape periods
-        path_item = item_prefix_7 + trunc_file_path + ".Explore\ in\ horizontal\ split<Tab>:Sexplore\ " + dir_path + " :Sexplore " + dir_path.replace("\\.", ".") + "<cr>"
-        self.menus.append(path_item)
+        if reveal_log_cmd:
+            debug_item = "amenu %s %s.debug.Explore\ in\ System<Tab>%s :%s %s<cr>" % (explore_priority, self.root, os.path.dirname(log_name), reveal_log_cmd, os.path.dirname(log_name))
+            self.menus.append(debug_item)
 
-        # unescape periods
-        path_item = item_prefix_8 + trunc_file_path + ".Explore\ in\ vertical\ split<Tab>:Sexplore!\ " + dir_path + " :Sexplore! " + dir_path + "<cr>"
-        self.menus.append(path_item)
-
-        #path_item = item_prefix + trunc_file_path + ".Explore\ belowright<Tab>:Hexplore\ " + dir_path + " :Hexplore " + dir_path + "<cr>"
-        #self.menus.append(path_item)
-
-        #path_item = item_prefix + trunc_file_path + ".Explore\ aboveleft<Tab>:Hexplore!\ " + dir_path + " :Hexplore! " + dir_path + "<cr>"
-        #self.menus.append(path_item)
-
-        #path_item = item_prefix + trunc_file_path + ".Explore\ leftabove<Tab>:Vexplore\ " + dir_path + " :Vexplore " + dir_path + "<cr>"
-        #self.menus.append(path_item)
-
-        #path_item = item_prefix + trunc_file_path + ".Explore\ rightbelow<Tab>:Vexplore!\ " + dir_path + " :Vexplore! " + dir_path + "<cr>"
-        #self.menus.append(path_item)
-
-        #path_item = item_prefix + trunc_file_path + ".Explore\ in\ new\ tab<Tab>:Texplore\ " + dir_path + " :Texplore " + dir_path + "<cr>"
-        #self.menus.append(path_item)
-
-        path_item = item_prefix_9 + trunc_file_path + ".Explore\ in\ NERDTree<Tab>:NERDTreeFind\ " + dir_path + " :NERDTree " + dir_path + "<cr>"
-        self.menus.append(path_item)
-
-    # add mapping menus
-    def gen_mappings_menu(self, mappings):
-        sep_priority = "...60"
-        title_priority = "...70"
-        item_priority = "...80"
-
-        item_prefix = "amenu %s %s" % (item_priority, self.menu_script_prefix)
-
-        if len(mappings) > 0:
-            sep_item = "amenu %s %s-Sep2- :<cr>" % (sep_priority, self.menu_script_prefix)
-            self.menus.append(sep_item)
-
-            title_item = "amenu %s %sMappings :<cr>" % (title_priority, self.menu_script_prefix)
-            self.menus.append(title_item)
-            title_item = "amenu disable %sMappings" % self.menu_script_prefix
-            self.menus.append(title_item)
-
-        for mode, keys, command in mappings:
-            mode = self.sanitise_menu(mode)
-            keys = self.sanitise_menu(keys)
-            command = self.sanitise_menu(command)
-
-            mapping_item = item_prefix + mode + "." + keys + "<Tab>" + command + " :" + "<cr>"
-
-            self.menus.append(mapping_item)
-
-    # add autocmd menus
-    def gen_autocmds_menu(self, autocmds):
-        sep_priority = "...150"
-        title_priority = "...160"
-        item_priority = "...170"
-
-        item_prefix = "amenu %s %s" % (item_priority, self.menu_script_prefix)
-
-        if len(autocmds) > 0:
-            sep_item = "amenu %s %s-Sep5- :<cr>" % (sep_priority, self.menu_script_prefix)
-            self.menus.append(sep_item)
-
-            title_item = "amenu %s %sAutocmds :<cr>" % (title_priority, self.menu_script_prefix)
-            self.menus.append(title_item)
-            title_item = "amenu disable %sAutocmds" % self.menu_script_prefix
-            self.menus.append(title_item)
-
-        for buffer, group, event, pattern, autocmd in autocmds:
-            autocmd = trunc_autocmd = self.sanitise_menu(autocmd)
-
-            if (len(autocmd) > self.TRUNC_LIMIT):
-                trunc_autocmd = autocmd[:self.TRUNC_LIMIT] + ">"
-
-            autocmd_item = item_prefix
-
-            if buffer:
-                autocmd_item += self.sanitise_menu(buffer) + "."
-
-            if group:
-                autocmd_item += self.sanitise_menu(group) + "."
-
-            autocmd_item += self.sanitise_menu(event) + "."
-
-            if pattern:
-                autocmd_item += self.sanitise_menu(pattern) + "."
-
-            autocmd_item += trunc_autocmd + "<Tab>" + autocmd + " :" + "<cr>"
-
-            self.menus.append(autocmd_item)
-
-    # add function menus
-    def gen_functions_menu(self, functions):
-        sep_priority = "...180"
-        item_priority = "...190"
-
-        item_prefix = "amenu %s %s" % (item_priority, self.menu_script_prefix)
-
-        if len(functions) > 0:
-            sep_item = "amenu %s %s-Sep6- :<cr>" % (sep_priority, self.menu_script_prefix)
-            self.menus.append(sep_item)
-
-        for function in functions:
-            function = trunc_function = self.sanitise_menu(function)
-
-            if (len(function) > self.TRUNC_LIMIT):
-                trunc_function = function[:self.TRUNC_LIMIT] + ">"
-
-            function_item = item_prefix + "Functions." + trunc_function + "<Tab>" + function + " :" + "<cr>"
-
-            self.menus.append(function_item)
-
-    # add abbreviation menus
-    # TODO: test expressions
-    def gen_abbreviations_menu(self, abbreviations):
-        sep_priority = "...120"
-        title_priority = "...130"
-        item_priority = "...140"
-
-        item_prefix = "amenu %s %s" % (item_priority, self.menu_script_prefix)
-
-        if len(abbreviations) > 0:
-            sep_item = "amenu %s %s-Sep4- :<cr>" % (sep_priority, self.menu_script_prefix)
-            self.menus.append(sep_item)
-
-            title_item = "amenu %s %sAbbreviations :<cr>" % (title_priority, self.menu_script_prefix)
-            self.menus.append(title_item)
-            title_item = "amenu disable %sAbbreviations" % self.menu_script_prefix
-            self.menus.append(title_item)
-
-        for mode, expression, lhs, rhs in abbreviations:
-            lhs = trunc_lhs = self.sanitise_menu(lhs)
-            mode = self.sanitise_menu(mode)
-
-            if (len(lhs) > self.TRUNC_LIMIT):
-                trunc_lhs = lhs[:self.TRUNC_LIMIT] + ">"
-
-            if not expression:
-                expression = ""
-
-            #if expression:
-                #expression = "<expr>: "
-            #else:
-                #expression = ""
-
-            abbreviation_item = item_prefix + mode + "." + trunc_lhs + "<Tab>" + expression + rhs + " :" + "<cr>"
-
-            self.menus.append(abbreviation_item)
-
-    # add help menus
-    def gen_help_menu(self, name):
-        priority = "...10"
-        sep_priority = "...20"
-
-        prefix = "amenu %s %s" % (priority, self.menu_script_prefix)
-
-        #path_item = self.menu_prefix + "Help" + " :helpgrep " + name + "<cr>"
-        path_item = prefix + "Help" + " :help " + name + "<cr>"
-        self.menus.append(path_item)
-
-        #sep_item = "amenu %s %s-Sep1- :<cr>" % (sep_priority, self.menu_script_prefix)
-        #self.menus.append(sep_item)
-
+    # extracts the source path from the line
     def get_source_script(self, line):
         source_path = re.findall(r"^.*Last set from (.+$)", line)[0]
         source_path = self.sanitise_path(source_path)
 
-        # TODO: this condition shouldn't occur...test
-        #script = scripts.get(source_path, init_script(source_path))
-        if source_path in self.scripts:
-            return self.scripts.get(source_path)
-        else:
-            #print("############# no existing script found for this source!")
-            return self.init_script(source_path)
+        return self.plugins.get(source_path)
 
+    # extracts the scripts (aka plugins/bundles)
     def parse_scriptnames(self, scriptnames):
         for path in scriptnames:
-            path = re.sub(r"^\s*\d+:\s+", "", path)     # strip out leading indexes
+            # strip out leading indexes
+            path = re.sub(r"^\s*\d+:\s+", "", path)
             path = self.sanitise_path(path)
 
-            self.init_script(path)
+            self.init_plugin(path)
 
+    # extracts the commands
     # TODO: consider that some commands are local to the buffer, see how you'd handle reloading
     def parse_commands(self, commands):
         # delete the listing header
@@ -401,7 +392,6 @@ class Headlights:
 
                 matches = re.findall(regex, line, re.VERBOSE | re.IGNORECASE)
 
-                #try:
                 attribute, command, args, range, complete, label = \
                     matches[0][0].strip(), \
                     matches[0][1].strip(), \
@@ -415,6 +405,7 @@ class Headlights:
 
                 source_script["commands"].append({command: label})
 
+    # extracts the mappings
     def parse_mappings(self, mappings):
         for i, line in enumerate(mappings):
             # begin with mapping lines
@@ -445,9 +436,9 @@ class Headlights:
                     matches[0][2].strip(), \
                     matches[0][3].strip()
 
-                # set blank modes to * (these were originally spaces, but were stripped)
+                # restore blank mode to original value (space)
                 if mode is "":
-                    mode = "*"
+                    mode = " "
 
                 # delete anything preceding the first :
                 # TODO: test that this works
@@ -456,9 +447,8 @@ class Headlights:
                 # cater for multiple modes
                 modes = list(mode)
 
-                # append mode descriptions
-                #modes = [m + " - " + self.MODE_MAP.get(m) for m in modes]
-                modes = ["%s - %s" % (m, self.MODE_MAP.get(m)) for m in modes]
+                # translate to mode descriptions
+                modes = [self.MODE_MAP.get(m) for m in modes]
 
                 # get the source script from the next list item
                 try:
@@ -472,8 +462,12 @@ class Headlights:
                 except IndexError:
                     pass
 
-    # TODO: this is quite broken. dodgy, slow algorithm. misses some autocmds. botches some patterns. fix.
+    # extracts the autocmds
+    # TODO: this is quite broken. incredibly slow. duplicates items. misses some autocmds. botches some patterns. fix.
     def parse_autocmds(self, autocmds):
+        # disabled until autocmds are fixed
+        return
+
         # delete the listing header
         autocmds = autocmds[1:]
 
@@ -541,6 +535,7 @@ class Headlights:
                         source_script = self.get_source_script(source)
                         source_script["autocmds"].append([buffer, group, event.strip(), pattern.strip(), autocmd.strip()])
 
+# extracts the functions
     def parse_functions(self, functions):
         for i, line in enumerate(functions):
             if not self.is_source_line(line):
@@ -553,6 +548,7 @@ class Headlights:
                 source_script["functions"].append(function)
 
     # TODO: test <expr> abbreviations
+    # extracts the abbreviations
     def parse_abbreviations(self, abbreviations):
         for i, line in enumerate(abbreviations):
             # begin with mapping lines
@@ -596,9 +592,8 @@ class Headlights:
                 # they aren't.
                 modes = list(mode)
 
-                # append mode descriptions
-                #modes = [m + " - " + self.MODE_MAP.get(m) for m in modes]
-                modes = ["%s - %s" % (m, self.MODE_MAP.get(m)) for m in modes]
+                # translate to mode descriptions
+                modes = [self.MODE_MAP.get(m) for m in modes]
 
                 # get the source script from the next list item
                 source_script = self.get_source_script(abbreviations[i+1])
@@ -607,27 +602,43 @@ class Headlights:
                 for m in modes:
                     source_script["abbreviations"].append([m, expression, lhs, rhs])
 
-    def get_menu_commands(self, scriptnames, **components):
-        log_file = None
-        log_name = None
+    # attaches the debug menu and writes the log file
+    def do_debug(self, scriptnames, **categories):
+        LOGNAME_PREFIX = "headlights_"
+        LOGNAME_SUFFIX = ".log"
 
-        if self.debug:
-            self.log_file = tempfile.NamedTemporaryFile(prefix=self.LOGNAME_PREFIX, suffix=self.LOGNAME_SUFFIX, delete=False)
-            log_name = self.log_file.name
-            self.log_file.write("Headlights (Vim) log, %s.%c%c" % (time.ctime(), self.NEW_LINE, self.NEW_LINE))
+        log_file = tempfile.NamedTemporaryFile(prefix=LOGNAME_PREFIX, suffix=LOGNAME_SUFFIX, delete=False)
 
-        self.parse_scriptnames(scriptnames.strip().split("\n"))
+        self.gen_debug_menu(log_file.name)
 
-        for key in components.keys():
-            if components[key] is not "":
-                function = getattr(self, "parse_" + key)
-                function(components[key].strip().split("\n"))
+        log_file.write("Headlights (Vim) log, %s%c" % (time.ctime(), os.linesep))
+        log_file.write("Platform: %s%s" % (platform.platform(), os.linesep * 2))
+        log_file.write("Plugins:%s%s" % (scriptnames, os.linesep * 2))
+        [log_file.write("%s:%s%s" % (key.upper(), categories[key], os.linesep * 2)) for key in categories.keys()]
+        [log_file.write("%s%c" % (menu, os.linesep)) for menu in self.menus]
+        log_file.write("%cHeadlights vim code executed in %.2f seconds" % (os.linesep, self.python_timer - self.vim_timer))
+        log_file.write("%cHeadlights python code executed in %.2f seconds" % (os.linesep, time.time() - self.python_timer))
+        log_file.close()
 
-        self.gen_menus()
+    # coordinates the action and returns the vim menus
+    def get_menu_commands(self, scriptnames, **categories):
+        try:
+            self.parse_scriptnames(scriptnames.strip().split("\n"))
 
-        if self.debug:
-            timer_elapsed = time.time() - self.timer_start
-            self.log_file.write("%cHeadlights python code executed in %.2f seconds" % (self.NEW_LINE, timer_elapsed))
-            self.log_file.close()
+            # parse the menu categories with the similarly named functions
+            for key in categories.keys():
+                if categories[key] is not "":
+                    function = getattr(self, "parse_" + key)
+                    function(categories[key].strip().split("\n"))
 
-        return log_name, self.menus
+            self.gen_menus()
+
+        except:
+            # let the full strack trace reach vim
+            raise
+
+        finally:
+            if self.debug:
+                self.do_debug(scriptnames, **categories)
+
+        return sorted(self.menus, key=lambda menu: menu.lower())
