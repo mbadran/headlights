@@ -2,15 +2,13 @@
 # encoding: utf-8
 
 '''
-
 Python helper script to generate menus for headlights.vim. See README.mkd for details.
-
 '''
 
 import os, re, platform, time, tempfile
 
 class Headlights:
-    plugins = {}
+    bundles = {}
     menus = []
 
     is_source_line = lambda self, line: re.match("^.*Last set from", line)
@@ -44,12 +42,12 @@ class Headlights:
         self.vim_timer = float(vim_timer)
         self.python_timer = time.time()
 
-    # initialises new plugins (aka scripts/bundles)
-    def init_plugin(self, path):
+    # initialises new bundles (aka scripts/plugins)
+    def init_bundle(self, path):
         name = os.path.splitext(os.path.basename(path))[0]
-        self.plugins[path] = {"name": name, "commands": [], "mappings": [], "abbreviations": [], "functions": [], "autocmds": []}
+        self.bundles[path] = {"name": name, "commands": [], "mappings": [], "abbreviations": [], "functions": [], "autocmds": []}
 
-        return self.plugins[path]
+        return self.bundles[path]
 
     # returns the appropriate menu label
     def get_spillover(self, name, path):
@@ -88,10 +86,10 @@ class Headlights:
             topsep_item = "amenu %s %s-Sep0- :" % (topsep_priority, menu_head)
             self.menus.append(topsep_item)
 
-        for path, properties in self.plugins.items():
+        for path, properties in self.bundles.items():
             name = self.sanitise_menu(properties["name"])
 
-            if self.spillover and len(self.plugins.keys()) > self.threshhold:
+            if self.spillover and len(self.bundles.keys()) > self.threshhold:
                 self.menu_script_prefix = menu_head + self.get_spillover(name, path) + name + "."
             else:
                 self.menu_script_prefix = menu_head + name + "."
@@ -127,7 +125,7 @@ class Headlights:
                 command_label = self.sanitise_menu(command[command.keys()[0]])
 
                 # associate related mappings
-                mappings = self.plugins[path]["mappings"]
+                mappings = self.bundles[path]["mappings"]
                 for mapping in mappings:
                     matches = re.findall("^:(.*)<cr>$", mapping[2], re.IGNORECASE)
                     if matches and matches[0] == command.keys()[0]:
@@ -163,7 +161,9 @@ class Headlights:
         elif platform.system() == "Windows":
             open_cmd = "silent !start gvim.exe"
             reveal_cmd = "silent !start"
-        # TODO: handle linux
+        elif platform.system() == "Linux":
+            open_cmd = "silent !xdg-open vim"
+            reveal_cmd = "silent !xdg-open"
         else:
             open_cmd = "edit"
             reveal_cmd = ""
@@ -337,6 +337,9 @@ class Headlights:
         elif platform.system() == "Windows":
             open_log_cmd = "silent !start gvim.exe"
             reveal_log_cmd = "silent !start"
+        elif platform.system() == "Linux":
+            open_log_cmd = "silent !xdg-open vim"
+            reveal_log_cmd = "silent !xdg-open"
         else:
             open_log_cmd = "edit"
             reveal_log_cmd = ""
@@ -356,19 +359,20 @@ class Headlights:
         source_path = re.findall(r"^.*Last set from (.+$)", line)[0]
         source_path = self.sanitise_path(source_path)
 
-        return self.plugins.get(source_path)
+        return self.bundles.get(source_path)
 
-    # extracts the scripts (aka plugins/bundles)
+    # extracts the bundles (aka scripts/plugins)
     def parse_scriptnames(self, scriptnames):
         for path in scriptnames:
             # strip out leading indexes
             path = re.sub(r"^\s*\d+:\s+", "", path)
             path = self.sanitise_path(path)
 
-            self.init_plugin(path)
+            self.init_bundle(path)
 
     # extracts the commands
-    # TODO: consider that some commands are local to the buffer, see how you'd handle reloading
+    # TODO: consider that some commands are local to the buffer, see how you'd handle reloading the menu
+    # for example, fugitive commands are local to the buffer
     def parse_commands(self, commands):
         # delete the listing header
         commands = commands[1:]
@@ -613,7 +617,7 @@ class Headlights:
 
         log_file.write("Headlights (Vim) log, %s%c" % (time.ctime(), os.linesep))
         log_file.write("Platform: %s%s" % (platform.platform(), os.linesep * 2))
-        log_file.write("Plugins:%s%s" % (scriptnames, os.linesep * 2))
+        log_file.write("Scriptnames:%s%s" % (scriptnames, os.linesep * 2))
         [log_file.write("%s:%s%s" % (key.upper(), categories[key], os.linesep * 2)) for key in categories.keys()]
         [log_file.write("%s%c" % (menu, os.linesep)) for menu in self.menus]
         log_file.write("%cHeadlights vim code executed in %.2f seconds" % (os.linesep, self.python_timer - self.vim_timer))
@@ -621,6 +625,7 @@ class Headlights:
         log_file.close()
 
     # coordinates the action and returns the vim menus
+    # (avoid running any vim commands here)
     def get_menu_commands(self, scriptnames, **categories):
         try:
             self.parse_scriptnames(scriptnames.strip().split("\n"))
