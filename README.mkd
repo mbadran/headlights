@@ -18,11 +18,11 @@ Combined with a powerful bundle manager like [Vundle] [3], Headlights will impro
 
 Here, have a [screenshot] [4].
 
-## How to install Headlights
+# How to install Headlights
 
 NOTE: Headlights requires a graphical version of Vim with Python support.
 
-### The Vundle Way
+## The Vundle Way
 
 1. Add the following line to the Vundle section in your `.vimrc`:
 
@@ -34,7 +34,7 @@ NOTE: Headlights requires a graphical version of Vim with Python support.
 
 3. Relaunch Vim.
 
-### The manual way
+## The manual way
 
 1. Download the source archive from [GitHub] [5].
 
@@ -42,7 +42,7 @@ NOTE: Headlights requires a graphical version of Vim with Python support.
 
 3. Launch Vim.
 
-## What to do when Headlights fails
+# What to do when Headlights fails
 
 Headlights is an ambitious plugin. It tries to handle any plugin, on any version of Vim, on any operating system. There are bound to be combinations that evade testing.
 
@@ -52,9 +52,9 @@ Typically, you'll see an error when you launch Vim, which you can retrieve with 
 
     `messages`
 
-At the very least, please email me (mebadran AT gmail) the error message. But preferably, please take a couple of minutes to raise an issue.
+At the very least, please email me the error message (mebadran AT gmail). But preferably, please take a couple of minutes to raise an issue.
 
-### How to raise an issue
+## How to raise an issue
 
 1. Add the following line to your `.gvimrc`:
 
