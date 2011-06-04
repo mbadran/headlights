@@ -1,6 +1,6 @@
 # If you use Vim, you need Headlights
 
-- Do you find it difficult to keep track of what Vim [1] [plugins] [2] you've installed?
+- Do you find it difficult to keep track of what [Vim] [1] [plugins] [2] you've installed?
 
 - Have you ever installed a plugin, only to get stuck when actually trying to use it?
 
@@ -12,7 +12,7 @@ If your answer to any of those questions is "Yes", "All the time!", or "Vim, is 
 
 Headlights is a Vim plugin that creates a [TextMate] [3] like _Bundles_ menu.
 
-Headlights sheds light on what plugins are installed and how to use them. It creates a menu for each plugin, scraping together docs, commands, mappings, abbreviations, functions, and script files.
+Headlights sheds light (geddit?) on what plugins are installed and how to use them. It creates a menu for each plugin, scraping together docs, commands, mappings, abbreviations, functions, and script files.
 
 Combined with a powerful bundle manager like [Vundle] [4], Headlights will improve your ~~Vim user experience~~ quality of life.
 
@@ -46,13 +46,13 @@ NOTE: Headlights requires a graphical version of Vim with Python support.
 
 Headlights is an ambitious plugin. It tries to handle any plugin, on any version of Vim, on any operating system. There are bound to be combinations that evade testing.
 
-If you see any errors when you start up Vim, please let me know. You'll be helping improve Headlights and making history in the process.
+If you encounter any errors, please let me know. You'll be helping improve Headlights and making history in the process.
 
 Typically, you'll see an error when you launch Vim, which you can retrieve with the following Vim command:
 
     `messages`
 
-At the very least, please [email me] [7] the error message. But ideally, please take a couple of minutes to raise an issue.
+At the very least, please [email me] [7] the error message. But preferably, please take a couple of minutes to raise an issue.
 
 ### How to raise an issue
 
@@ -66,7 +66,7 @@ At the very least, please [email me] [7] the error message. But ideally, please 
 
 4. Upload the debug log to the Web (for eg. [Pastebin] [8]).
 
-5. Raise a new [issue] [9] for the error, and reference the online debug log.
+5. Raise a new [issue] [9] for the error, referencing the debug log.
 
 I also welcome any [pull requests] [10], so feel free to contribute.
 
