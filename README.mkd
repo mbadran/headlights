@@ -10,13 +10,13 @@ If your answer to any of those questions is "Yes", "All the time!", or "Vim, is 
 
 # What is Headlights?
 
-Headlights is a Vim plugin that creates a [TextMate] [3] like _Bundles_ menu.
+Headlights is a Vim plugin that creates a [TextMate] [2] like _Bundles_ menu.
 
 Headlights sheds light (geddit?) on what plugins are installed and how to use them. It creates a menu for each plugin, scraping together docs, commands, mappings, abbreviations, functions, and script files.
 
-Combined with a powerful bundle manager like [Vundle] [4], Headlights will improve your ~~Vim user experience~~ quality of life.
+Combined with a powerful bundle manager like [Vundle] [3], Headlights will improve your ~~Vim user experience~~ quality of life.
 
-Here, have a [screenshot] [5].
+Here, have a [screenshot] [4].
 
 ## How to install Headlights
 
@@ -36,7 +36,7 @@ NOTE: Headlights requires a graphical version of Vim with Python support.
 
 ### The manual way
 
-1. Download the source archive from [GitHub] [6].
+1. Download the source archive from [GitHub] [5].
 
 2. Expand the contents of the Headlights plugin directory into your `.vim/plugin/` directory.
 
@@ -52,7 +52,7 @@ Typically, you'll see an error when you launch Vim, which you can retrieve with 
 
     `messages`
 
-At the very least, please [email me] [7] the error message. But preferably, please take a couple of minutes to raise an issue.
+At the very least, please [email me] [6] the error message. But preferably, please take a couple of minutes to raise an issue.
 
 ### How to raise an issue
 
@@ -64,11 +64,11 @@ At the very least, please [email me] [7] the error message. But preferably, plea
 
 3. Find the Headlights debug log in the `Bundles > debug` menu (or wherever you've defined your Headlights root menu).
 
-4. Upload the debug log to the Web (for eg. [Pastebin] [8]).
+4. Upload the debug log to the Web (for eg. [Pastebin] [7]).
 
-5. Raise a new [issue] [9] for the error, referencing the debug log.
+5. Raise a new [issue] [8] for the error, referencing the debug log.
 
-I also welcome any [pull requests] [10], so feel free to contribute.
+I also welcome any [pull requests] [9], so feel free to contribute.
 
 [1]: http://www.vim.org/
 
@@ -86,4 +86,4 @@ I also welcome any [pull requests] [10], so feel free to contribute.
 
 [8]: https://github.com/mbadran/headlights/issues
 
-[9]: http://help.github.com/forking/
+[9]: http://help.github.com/fork-a-repo/
