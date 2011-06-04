@@ -68,6 +68,8 @@ At the very least, please email me the error message (mebadran AT gmail). But pr
 
 5. Raise a new [issue] [7] for the error, referencing the debug log.
 
+(When you're done, remove the debug line from your `.gvimrc`.)
+
 I also welcome any [pull requests] [8], so feel free to contribute.
 
 [1]: http://www.vim.org/
