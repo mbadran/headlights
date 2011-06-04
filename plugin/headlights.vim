@@ -24,7 +24,7 @@ if has("gui_running")
   let g:headlights_mappings = 1
   let g:headlights_abbreviations = 1
   let g:headlights_functions = 1
-  let g:headlights_autocmds = 1
+  let g:headlights_autocmds = 0
 
   autocmd GUIEnter * call s:AttachMenus()
 endif
