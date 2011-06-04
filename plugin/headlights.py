@@ -129,6 +129,7 @@ class Headlights:
                 for mapping in mappings:
                     matches = re.findall("^:(.*)<cr>$", mapping[2], re.IGNORECASE)
                     if matches and matches[0] == command.keys()[0]:
+                        # TODO: test if this is working anymore
                         command_name += "\ (%s)" % mapping[1]
 
                 command_item = "amenu %s %s%s<Tab>:%s :%s<cr>" % (item_priority, self.menu_script_prefix, command_name, command_label, command_name)
@@ -371,7 +372,7 @@ class Headlights:
             self.init_bundle(path)
 
     # extracts the commands
-    # TODO: consider that some commands are local to the buffer, see how you'd handle reloading the menu
+    # TODO: consider that some commands are local to the buffer, see how you'd handle reloading the menu (dynamic)
     # for example, fugitive commands are local to the buffer
     def parse_commands(self, commands):
         # delete the listing header
@@ -428,12 +429,8 @@ class Headlights:
 
                 matches = re.findall(regex, line, re.VERBOSE | re.IGNORECASE)
 
-                # TODO: consider doing something with the attribute
-                # TODO: this whole thing is complicated because there can be more than
-                # one mode for the same mapping.
-                # ISSUE: mappings with multiple modes in a mapping (eg. searchcomplete /) come through with
-                # a space value instead, so they appear as "Normal, Visual, Select, and Operator-pending", when in fact,
-                # they aren't.
+                # TODO: consider doing something with the attribute (for eg. show non-remappable (help map-listing))
+                # TODO: cater for buffer local mappings (dynamic menus...)
                 mode, keys, attribute, command = \
                     matches[0][0].strip(), \
                     matches[0][1].strip(), \
@@ -590,10 +587,6 @@ class Headlights:
                 #command = re.sub("^.*:", ":", command)
 
                 # cater for multiple modes
-                # TODO: test that this works (issue here)
-                # ISSUE: mappings with multiple modes in a mapping (eg. searchcomplete /) come through with
-                # a space value instead, so they appear as "Normal, Visual, Select, and Operator-pending", when in fact,
-                # they aren't.
                 modes = list(mode)
 
                 # translate to mode descriptions
