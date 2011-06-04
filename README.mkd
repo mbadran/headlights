@@ -1,6 +1,6 @@
 # If you use Vim, you need Headlights
 
-- Do you find it difficult to keep track of what [Vim] [1] [plugins] [2] you've installed?
+- Do you find it difficult to keep track of what [Vim] [1] plugins (aka bundles) you've installed?
 
 - Have you ever installed a plugin, only to get stuck when actually trying to use it?
 
@@ -72,20 +72,18 @@ I also welcome any [pull requests] [10], so feel free to contribute.
 
 [1]: http://www.vim.org/
 
-[2]: Also known as scripts or Bundles.
+[2]: http://macromates.com/
 
-[3]: http://macromates.com/
+[3]: https://github.com/gmarik/vundle
 
-[4]: https://github.com/gmarik/vundle
+[4]: https://github.com/mbadran/headlights/raw/master/headlights_ss.png
 
-[5]: https://github.com/mbadran/headlights/raw/master/headlights_ss.png
+[5]: https://github.com/mbadran/headlights/archives/master
 
-[6]: https://github.com/mbadran/headlights/archives/master
+[6]: mailto:mebadran AT gmail
 
-[7]: mebadran AT gmail
+[7]: http://pastebin.com/
 
-[8]: http://pastebin.com/
+[8]: https://github.com/mbadran/headlights/issues
 
-[9]: https://github.com/mbadran/headlights/issues
-
-[10]: http://help.github.com/forking/
+[9]: http://help.github.com/forking/
