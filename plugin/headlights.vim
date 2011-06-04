@@ -13,7 +13,7 @@ if has("gui_running")
   " The threshhold after which the menu is alphabetically labeled
   let g:headlights_threshhold = 30
 
-  " Debug mode. Enable to debug any errors or performance issues. See README.
+  " Debug mode. Enable to debug any errors or performance issues.
   " IMPORTANT: set this to 0 when you're done, otherwise log files will be
   " generated every time you load a Vim instance.
   let g:headlights_debug = 0
@@ -42,7 +42,7 @@ function! s:GetCommandOutput(command)
   return l:out
 endfunction
 
-" returns raw bundle data to be transformed into vim menus
+" prepares the raw bundle data to be transformed into vim menus
 function! s:InitBundleData()
   " all categories are disabled by default
   let s:commands = ""
@@ -86,21 +86,21 @@ function! s:GetTopSeparator()
 endfunction
 
 " attaches the bundle menus to GVim/MacVim
+" (python spaghetti kept minimal)
 function! s:AttachMenus()
+  python import vim, time, traceback
+
   " time the execution of the vim code
   python vim.command("let l:vim_timer = %f" % time.time())
 
-  " get the raw bundle/script/plugin data
+  " prepare the raw bundle data
   call s:InitBundleData()
 
   " load helper python script
   let l:scriptdir = matchlist(s:scriptnames, '\d\+:\s\+\([^ ]\+\)headlights.vim')[1]
   execute "pyfile " . l:scriptdir . "headlights.py"
 
-  " python spaghetti kept minimal
   python << endpython
-
-import traceback
 
 # initialise an instance of the helper script
 headlights = Headlights(
