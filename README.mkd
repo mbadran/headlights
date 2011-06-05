@@ -6,7 +6,7 @@
 
 - Do you rely on Google for reference more than plugin docs?
 
-If your answer to any of those questions is "Yes", "All the time!", or "Vim, is that like a scooter?" -- Headlights is for you.
+If your answer to any of those questions is "Yes", "All the time!", or "Vim, is that like a scooter?" -- you've come to the right place.
 
 # What is Headlights?
 
@@ -32,7 +32,7 @@ NOTE: Headlights requires a graphical version of Vim with Python support.
 
     `BundleInstall`
 
-## The manual way
+## The Manual Way
 
 1. Download the source archive from [GitHub] [5].
 
@@ -44,13 +44,13 @@ NOTE: Headlights requires a graphical version of Vim with Python support.
 
 Headlights is an ambitious plugin. It tries to handle any plugin, on any version of Vim, on any operating system. There are bound to be combinations that evade testing.
 
-If you encounter any errors, please let me know. You'll be helping improve Headlights and making history in the process.
+If you encounter any errors, please let me know. You'll be helping improve Headlights and making history in the process!
 
 Typically, you'll see an error when you launch Vim, which you can retrieve with the following Vim command:
 
     `messages`
 
-At the very least, please email me the error message (mebadran AT gmail). But preferably, please take a couple of minutes to raise an issue.
+At the very least, please email me the error message (mebadran AT gmail). But ideally, please take a couple of minutes to raise an issue.
 
 ## How to raise an issue
 
@@ -58,7 +58,7 @@ At the very least, please email me the error message (mebadran AT gmail). But pr
 
     `let g:headlights_debug = 1`
 
-2. Launch Vim.
+2. Relaunch Vim.
 
 3. Find the Headlights debug log in the `Bundles > debug` menu (or wherever you've defined your Headlights root menu).
 
