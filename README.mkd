@@ -32,8 +32,6 @@ NOTE: Headlights requires a graphical version of Vim with Python support.
 
     `BundleInstall`
 
-3. Relaunch Vim.
-
 ## The manual way
 
 1. Download the source archive from [GitHub] [5].
