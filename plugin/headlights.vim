@@ -1,5 +1,6 @@
-" Headlights is a Vim plugin that provides a TextMate-like 'Bundles' menu. See
-" README.mkd for details.
+" Headlights is a Vim plugin that provides a TextMate-like 'Bundles' menu.
+" Version: 1.1
+" Maintainer:	Mohammed Badran <mebadran AT gmail>
 
 " NOTE: You may override the below values in your vimrc
 if has("gui_running")
