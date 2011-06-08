@@ -3,9 +3,11 @@
 " Maintainer:	Mohammed Badran <mebadran AT gmail>
 
 " NOTE: You may override the below values in your vimrc
-if !has('gui_running')
+if exists('g:loaded_headlights') || !has('gui_running')
   finish
 endif
+
+let g:loaded_headlights = 1
 
 " The menu root. You can set this to the name of an existing menu, such as
 " 'Plugin'.
