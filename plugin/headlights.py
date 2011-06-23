@@ -1,23 +1,20 @@
 # encoding: utf-8
 
-"""
-Python helper class to generate menus for headlights.vim. See README.mkd for details.
-Version: 1.2
-Maintainer:	Mohammed Badran <mebadran AT gmail>
-"""
-
-# TODO: do more profiling
-# TODO: disable files and mappings by default (test performance)
-# TODO: for windows, i think we should use the execute() or system() vim function or something
-# TODO: fix up code comments
-# TODO: write :help doc (including -debug and -issues), and transfer some of the stuff in the readme there
 # TODO: feature: bring back functions, global only, as an option
+# TODO: disable files and mappings and functions by default
+# TODO: test end use with features disabled
+# TODO: do more profiling
+# TODO: write :help doc (including -debug and -issues), and transfer some of the stuff in the readme there
 # TODO: feature: make normal and visual mappings runnable, if it doesn't impact performance too much (test)
 
 import vim, os, re, sys, time
 
 class Headlights():
-    """Define helper object."""
+    """
+    Python helper class to generate menus for headlights.vim. See README.mkd for details.
+    Version: 1.2
+    Maintainer:	Mohammed Badran <mebadran AT gmail>
+    """
     bundles = {}
     menus = []
     errors = []
@@ -181,7 +178,7 @@ class Headlights():
             open_cmd = "!open -a MacVim"
             reveal_cmd = "!open"
         elif sys.platform == "win32":
-            open_cmd = "!start gvim.exe"
+            open_cmd = "!start gvim"
             reveal_cmd = "!start"
         elif sys.platform == "linux2":
             open_cmd = "!xdg-open vim"
@@ -287,7 +284,7 @@ class Headlights():
             open_log_cmd = "!open -a MacVim"
             reveal_log_cmd = "!open"
         elif sys.platform == "win32":
-            open_log_cmd = "!start gvim.exe"
+            open_log_cmd = "!start gvim"
             reveal_log_cmd = "!start"
         elif sys.platform == "linux2":
             open_log_cmd = "!xdg-open vim"
@@ -398,7 +395,7 @@ class Headlights():
         pattern = re.compile(r'''
             ^
             (?P<modes>[nvsxo!ilc]+)?
-            \s+
+            \s*
             (?P<lhs>[\S]+)
             \s+
             (?P<noremap>\*)?
@@ -409,7 +406,6 @@ class Headlights():
             $
             ''', re.VERBOSE | re.IGNORECASE)
 
-        # TODO: fix the pyflakes mapping (<CR> thing)
         for i, line in enumerate(mappings):
             # begin with mapping lines
             if not line.find(self.SOURCE_LINE) > -1:
@@ -417,9 +413,14 @@ class Headlights():
 
                 try:
                     lhs = matches.group("lhs").strip()
+                except AttributeError:
+                    self.errors.append("parse_mappings: lhs not found for mapping '%(line)s'" % locals())
+                    continue
+
+                try:
                     rhs = matches.group("rhs").strip()
                 except AttributeError:
-                    self.errors.append("parse_mappings: lhs/rhs not found for mapping '%(line)s'" % locals())
+                    self.errors.append("parse_mappings: rhs not found for mapping '%(line)s'" % locals())
                     continue
 
                 modes = self.parse_modes(matches.group("modes"))
@@ -449,7 +450,7 @@ class Headlights():
         pattern = re.compile(r'''
             ^
             (?P<modes>[nvsxo!ilc]+)?
-            \s+
+            \s*
             (?P<lhs>[\S]+)
             \s+
             (?P<rhs>.+)
@@ -463,9 +464,14 @@ class Headlights():
 
                 try:
                     lhs = matches.group("lhs").strip()
+                except AttributeError:
+                    self.errors.append("parse_abbreviations: lhs not found for abbreviation '%(line)s'" % locals())
+                    continue
+
+                try:
                     rhs = matches.group("rhs").strip()
                 except AttributeError:
-                    self.errors.append("parse_abbreviations: lhs/rhs not found for abbreviation '%(line)s'" % locals())
+                    self.errors.append("parse_abbreviations: rhs not found for abbreviation '%(line)s'" % locals())
                     continue
 
                 modes = self.parse_modes(matches.group("modes"))
