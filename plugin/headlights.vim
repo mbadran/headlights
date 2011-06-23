@@ -2,8 +2,6 @@
 " Version: 1.2
 " Maintainer:	Mohammed Badran <mebadran AT gmail>
 
-" TODO: fix the open file feature (busted with headlights, for eg.)
-
 if &cp || exists('g:loaded_headlights') || !has('gui_running')
   finish
 endif
@@ -16,6 +14,7 @@ if !exists('g:headlights_use_plugin_menu')
 endif
 
 " Individual menu components. Enable or disable to preference.
+" TODO: test after disabling some of these
 if !exists('g:headlights_commands')
   let g:headlights_commands = 1
 endif
@@ -26,6 +25,10 @@ endif
 
 if !exists('g:headlights_abbreviations')
   let g:headlights_abbreviations = 1
+endif
+
+if !exists('g:headlights_functions')
+  let g:headlights_functions = 1
 endif
 
 " Debug mode. Enable to debug any errors or performance issues.
@@ -56,6 +59,7 @@ function! s:InitBundleData()
   let s:commands = ''
   let s:mappings = ''
   let s:abbreviations = ''
+  let s:functions = ''
 
   let s:scriptnames = s:GetCommandOutput('scriptnames')
 
@@ -69,6 +73,10 @@ function! s:InitBundleData()
 
   if g:headlights_abbreviations
     let s:abbreviations = s:GetCommandOutput('abbreviate')
+  endif
+
+  if g:headlights_functions
+    let s:functions = s:GetCommandOutput('function')
   endif
 endfunction
 
@@ -93,7 +101,8 @@ function! s:RequestMenus()
       \ scriptnames=vim.eval("s:scriptnames"),
       \ commands=vim.eval("s:commands"),
       \ mappings=vim.eval("s:mappings"),
-      \ abbreviations=vim.eval("s:abbreviations"))
+      \ abbreviations=vim.eval("s:abbreviations"),
+      \ functions=vim.eval("s:functions"))
 
   if s:menu_root == 'Bundles'
     try | aunmenu Bundles.placeholder | catch /E329/ | endtry
