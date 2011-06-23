@@ -6,17 +6,13 @@ Version: 1.2
 Maintainer:	Mohammed Badran <mebadran AT gmail>
 """
 
+# TODO: do more profiling
+# TODO: disable files and mappings by default (test performance)
 # TODO: for windows, i think we should use the execute() or system() vim function or something
-# TODO: find out why the runtime vimrc files aren't showing up
-# TODO: figure out what to do about .netrwhistory and other files with dot at start
 # TODO: fix up code comments
-# TODO: feature: disable files and mappings by default (test performance)
+# TODO: write :help doc (including -debug and -issues), and transfer some of the stuff in the readme there
 # TODO: feature: bring back functions, global only, as an option
 # TODO: feature: make normal and visual mappings runnable, if it doesn't impact performance too much (test)
-# TODO: test on windows, linux, and other platforms (via vm)
-# TODO: write :help doc, and transfer some of the stuff in the readme there
-# TODO: write :help headlights-debug for easy reference
-# TODO: do more profiling
 
 import vim, os, re, sys, time
 
@@ -48,11 +44,11 @@ class Headlights():
     sanitise_menu = lambda self, menu: menu.replace("\\", "\\\\").replace("|", "\\|").replace(".", "\\.").replace(" ", "\\ ").replace("<", "\\<")
 
     spillover_cat_re = {
-        re.compile(r"\\.?g?vimrc", re.IGNORECASE): "⁣vimrc",
-        re.compile(r"\d", re.IGNORECASE): "0 - 9",
-        re.compile(r"[a-i]", re.IGNORECASE): "a - i",
-        re.compile(r"[j-r]", re.IGNORECASE): "j - r",
-        re.compile(r"[s-z]", re.IGNORECASE): "s - z"
+        re.compile(r"(\\.)?g?vimrc", re.IGNORECASE): "⁣vimrc",
+        re.compile(r"(\\.)?\d", re.IGNORECASE): "0 - 9",
+        re.compile(r"(\\.)?[a-i]", re.IGNORECASE): "a - i",
+        re.compile(r"(\\.)?[j-r]", re.IGNORECASE): "j - r",
+        re.compile(r"(\\.)?[s-z]", re.IGNORECASE): "s - z"
     }
 
     def __init__(self, menu_root, debug_mode, vim_time, scriptnames, **categories):
@@ -83,6 +79,7 @@ class Headlights():
         """Return an appropriate menu category/spillover parent."""
         # a catch all, just in case
         spillover = self.DEFAULT_SPILLOVER
+
         name = name.strip()
 
         # use an invisible separator (looks like a space) to move menus to the bottom
@@ -98,26 +95,25 @@ class Headlights():
 
         return spillover
 
-    def expand_path(self, path):
-        """Return the path with the expanded home directory."""
-        #path = os.path.abspath(path)
-        if path.startswith("~"):
-            path = path.replace("~", os.getenv("HOME"), 1)
-
-        return path
-
     def gen_menus(self):
         """Add the root menu and coordinate menu categories."""
         root = self.menu_root
         for path, properties in self.bundles.items():
-            name = self.sanitise_menu(properties["name"])
+            name = properties["name"]
+
+            # ignore leading dots for grouping purposes
+            if name.startswith("."):
+                name = name[1:]
+
+            name = self.sanitise_menu(name)
 
             spillover = self.sanitise_menu(self.get_spillover(name, path))
 
             prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
 
-            # the help menu needs to be first so sort() can get the script order right
+            # this needs to be first so sort() can get the script order right
             self.gen_help_menu(name, prefix)
+
             self.gen_files_menu(path, prefix)
 
             if len(properties["commands"]) > 0:
@@ -150,7 +146,7 @@ class Headlights():
             name = self.sanitise_menu(command.keys()[0])
             definition = self.sanitise_menu(command[command.keys()[0]])
 
-            command_item = "amenu %(item_priority)s %(prefix)s%(name)s<Tab>:%(definition)s :%(name)s<cr>" % locals()
+            command_item = "amenu %(item_priority)s %(prefix)s%(name)s<Tab>:%(definition)s :%(name)s<CR>" % locals()
             self.menus.append(command_item)
 
     def gen_files_menu(self, path, prefix):
@@ -169,18 +165,18 @@ class Headlights():
         disabled_item = "amenu disable %(prefix)sFiles" % locals()
         self.menus.append(disabled_item)
 
-        file_path = self.sanitise_menu(path)
+        file_path = trunc_file_path = self.sanitise_menu(path)
         file_dir_path = self.sanitise_menu(os.path.dirname(path))
-        file_dir_path_vim = file_dir_path.replace("\\.", ".")
-        trunc_file_path = file_path[-self.MENU_TRUNC_LIMIT:]
-        # sanitise the first char, in case it's an escape char that got chopped off
-        trunc_file_path = self.sanitise_menu(trunc_file_path[0:1]) + trunc_file_path[1:len(trunc_file_path)]
+
+        # unescape dots so path commands can be run
+        file_path_cmd = file_path.replace("\\.", ".")
+        file_dir_path_cmd = file_dir_path.replace("\\.", ".")
 
         if len(file_path) > self.MENU_TRUNC_LIMIT:
-            trunc_file_path = "<" + trunc_file_path
+            trunc_file_path = "<" + self.sanitise_menu(path[-self.MENU_TRUNC_LIMIT:])
 
-        # make the file appear in the "File > Open Recent" menu
-        # also, honour the "Open files from applications" setting
+        # make the file appear in the "file > open recent" menu (macvim)
+        # also, honour the "open files from applications" option (macvim)
         if sys.platform == "darwin":
             open_cmd = "!open -a MacVim"
             reveal_cmd = "!open"
@@ -194,15 +190,14 @@ class Headlights():
             open_cmd = "edit"
             reveal_cmd = ""
 
-        open_item = "amenu %(item_priority)s.10 %(prefix)s%(trunc_file_path)s.Open\ File<Tab>%(file_path)s :%(open_cmd)s %(file_path)s<cr>" % locals()
+        open_item = "amenu %(item_priority)s.10 %(prefix)s%(trunc_file_path)s.Open\ File<Tab>%(file_path)s :%(open_cmd)s %(file_path_cmd)s<CR>" % locals()
         self.menus.append(open_item)
 
-        # unescape full stops for vim explorer
-        explore_item = "amenu %(item_priority)s.20 %(prefix)s%(trunc_file_path)s.Explore\ in\ Vim<Tab>%(file_dir_path)s :Explore %(file_dir_path_vim)s<cr>" % locals()
-        self.menus.append(explore_item)
+        sexplore_item = "amenu %(item_priority)s.20 %(prefix)s%(trunc_file_path)s.Sexplore\ in\ Vim<Tab>%(file_dir_path)s :Sexplore %(file_dir_path_cmd)s<CR>" % locals()
+        self.menus.append(sexplore_item)
 
         if reveal_cmd:
-            reveal_item = "amenu %(item_priority)s.30 %(prefix)s%(trunc_file_path)s.Explore\ in\ System<Tab>%(file_dir_path)s :%(reveal_cmd)s %(file_dir_path)s<cr>" % locals()
+            reveal_item = "amenu %(item_priority)s.30 %(prefix)s%(trunc_file_path)s.Explore\ in\ System<Tab>%(file_dir_path)s :%(reveal_cmd)s %(file_dir_path_cmd)s<CR>" % locals()
             self.menus.append(reveal_item)
 
     def gen_mappings_menu(self, mappings, prefix):
@@ -251,7 +246,7 @@ class Headlights():
             if len(lhs) > self.MENU_TRUNC_LIMIT:
                 trunc_lhs = lhs[:self.MENU_TRUNC_LIMIT] + ">"
 
-            abbr_item = "amenu %(item_priority)s %(prefix)s%(mode)s.%(trunc_lhs)s<Tab>%(rhs)s :<cr>" % locals()
+            abbr_item = "amenu %(item_priority)s %(prefix)s%(mode)s.%(trunc_lhs)s<Tab>%(rhs)s :<CR>" % locals()
             self.menus.append(abbr_item)
             disabled_item = "amenu disable %(prefix)s%(mode)s.%(trunc_lhs)s" % locals()
             self.menus.append(disabled_item)
@@ -266,7 +261,7 @@ class Headlights():
         disabled_item = "amenu disable %(prefix)sHelp" % locals()
         self.menus.append(disabled_item)
 
-        help_item = "amenu %(help_priority)s %(prefix)sDoc<Tab>help\ %(name)s :help %(name)s<cr>" % locals()
+        help_item = "amenu %(help_priority)s %(prefix)sDoc<Tab>help\ %(name)s :help %(name)s<CR>" % locals()
         self.menus.append(help_item)
 
     def gen_functions_menu(self, functions, prefix):
@@ -301,21 +296,21 @@ class Headlights():
             open_log_cmd = "edit"
             reveal_log_cmd = ""
 
-        open_item = "amenu %(open_priority)s %(root)s.debug.Open\ Log<Tab>%(log_name_label)s :%(open_log_cmd)s %(log_name)s<cr>" % locals()
+        open_item = "amenu %(open_priority)s %(root)s.debug.Open\ Log<Tab>%(log_name_label)s :%(open_log_cmd)s %(log_name)s<CR>" % locals()
         self.menus.append(open_item)
 
-        explore_item = "amenu %(sexplore_priority)s %(root)s.debug.Explore\ in\ Vim<Tab>%(log_dir)s :Explore %(log_dir)s<cr>" % locals()
+        explore_item = "amenu %(sexplore_priority)s %(root)s.debug.Explore\ in\ Vim<Tab>%(log_dir)s :Explore %(log_dir)s<CR>" % locals()
         self.menus.append(explore_item)
 
         if reveal_log_cmd:
-            reveal_item = "amenu %(explore_priority)s %(root)s.debug.Explore\ in\ System<Tab>%(log_dir)s :%(reveal_log_cmd)s %(log_dir)s<cr>" % locals()
+            reveal_item = "amenu %(explore_priority)s %(root)s.debug.Explore\ in\ System<Tab>%(log_dir)s :%(reveal_log_cmd)s %(log_dir)s<CR>" % locals()
             self.menus.append(reveal_item)
 
     def get_source_script(self, line):
         """Extract the source script from the line and return the bundle."""
         script_path = line.replace(self.SOURCE_LINE, "").strip()
         if script_path.startswith("~"):
-            script_path = script_path.replace("~", os.getenv("HOME"), 1)
+            script_path = os.getenv("HOME") + script_path[1:]
 
         return self.bundles.get(script_path)
 
@@ -324,9 +319,7 @@ class Headlights():
         self.scriptnames = self.scriptnames.strip().split("\n")
 
         for path in self.scriptnames:
-            # strip out leading indexes
-            path = path[path.find("/"):len(path)]
-
+            path = path[path.find("/"):]
             self.init_bundle(path)
 
     def parse_commands(self, commands):
@@ -528,11 +521,12 @@ class Headlights():
 
         self.menus.sort(key=lambda menu: menu.lower())
 
-        # only reset the buffer submenu, if it exists (faster than resetting everything)
+        # only reset the buffer submenu, if it exists
+        # this is faster than resetting everything, as it seems that vim will only attach new menus
+        # annoying side effect: new menus (for eg, via autoload) will go to the bottom and mess up the sorting
         vim.command("try | aunmenu %(root)s.⁣⁣buffer | catch /E329/ | endtry" % locals())
 
         # attach the vim menus (and recover gracefully)
-        # TODO: document: disable files, then mappings for performance boost (maybe disable files by default)
         [vim.command("try | %(menu_command)s | catch // | echomsg('%(warning_msg)s') | endtry" % locals()) for menu_command in self.menus]
 
     def do_debug(self):
@@ -564,7 +558,7 @@ DATE: %(date)s
 PLATFORM: %(platform)s
 
 This is the debug log for Headlights <https://github.com/mbadran/headlights/>
-For details on how to raise a GitHub issue, see :help headlights-issue
+For details on how to raise a GitHub issue, see :help headlights-issues
 Don't forget to disable debug mode when you're done!
 
 ERRORS:
