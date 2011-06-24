@@ -2,7 +2,7 @@
 " Version: 1.2
 " Maintainer:	Mohammed Badran <mebadran AT gmail>
 
-if &cp || exists('g:loaded_headlights') || !has('gui_running')
+if &cp || !has('python') || !has('gui_running') || exists('g:loaded_headlights')
   finish
 endif
 let g:loaded_headlights = 1
@@ -14,21 +14,20 @@ if !exists('g:headlights_use_plugin_menu')
 endif
 
 " Individual menu components. Enable or disable to preference.
-" TODO: test after disabling some of these
 if !exists('g:headlights_commands')
-  let g:headlights_commands = 1
+	let g:headlights_commands = 1
 endif
 
 if !exists('g:headlights_mappings')
-  let g:headlights_mappings = 1
+  let g:headlights_mappings = 0
 endif
 
 if !exists('g:headlights_abbreviations')
-  let g:headlights_abbreviations = 1
+  let g:headlights_abbreviations = 0
 endif
 
 if !exists('g:headlights_functions')
-  let g:headlights_functions = 1
+  let g:headlights_functions = 0
 endif
 
 " Debug mode. Enable to debug any errors or performance issues.
@@ -55,29 +54,13 @@ endfunction
 
 " prepares the raw bundle data to be transformed into vim menus
 function! s:InitBundleData()
-  " all categories are disabled by default
-  let s:commands = ''
-  let s:mappings = ''
-  let s:abbreviations = ''
-  let s:functions = ''
-
   let s:scriptnames = s:GetCommandOutput('scriptnames')
 
-  if g:headlights_commands
-    let s:commands = s:GetCommandOutput('command')
-  endif
-
-  if g:headlights_mappings
-    let s:mappings = s:GetCommandOutput('map')
-  endif
-
-  if g:headlights_abbreviations
-    let s:abbreviations = s:GetCommandOutput('abbreviate')
-  endif
-
-  if g:headlights_functions
-    let s:functions = s:GetCommandOutput('function')
-  endif
+  " all categories are disabled by default
+	let s:commands = g:headlights_commands? s:GetCommandOutput('command') : ""
+	let s:mappings = g:headlights_mappings? s:GetCommandOutput('map') : ""
+	let s:abbreviations = g:headlights_abbreviations? s:GetCommandOutput('abbreviate') : ""
+	let s:functions = g:headlights_functions? s:GetCommandOutput('function') : ""
 endfunction
 
 " requests the bundle menus from the helper python script
