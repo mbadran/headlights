@@ -3,7 +3,7 @@
 # TODO: feature: bring back functions, global only, as an option
 # TODO: disable files and mappings and functions by default
 # TODO: test end use with features disabled
-# TODO: do more profiling
+# TODO: do more profiling and optimisation
 # TODO: write :help doc (including -debug and -issues), and transfer some of the stuff in the readme there
 # TODO: feature: make normal and visual mappings runnable, if it doesn't impact performance too much (test)
 
@@ -41,11 +41,11 @@ class Headlights():
     sanitise_menu = lambda self, menu: menu.replace("\\", "\\\\").replace("|", "\\|").replace(".", "\\.").replace(" ", "\\ ").replace("<", "\\<")
 
     spillover_cat_re = {
-        re.compile(r"(\\.)?g?vimrc", re.IGNORECASE): "⁣vimrc",
-        re.compile(r"(\\.)?\d", re.IGNORECASE): "0 - 9",
-        re.compile(r"(\\.)?[a-i]", re.IGNORECASE): "a - i",
-        re.compile(r"(\\.)?[j-r]", re.IGNORECASE): "j - r",
-        re.compile(r"(\\.)?[s-z]", re.IGNORECASE): "s - z"
+        re.compile(r"(\.)?g?vimrc", re.IGNORECASE): "⁣vimrc",
+        re.compile(r"(\.)?\d", re.IGNORECASE): "0 - 9",
+        re.compile(r"(\.)?[a-i]", re.IGNORECASE): "a - i",
+        re.compile(r"(\.)?[j-r]", re.IGNORECASE): "j - r",
+        re.compile(r"(\.)?[s-z]", re.IGNORECASE): "s - z"
     }
 
     def __init__(self, menu_root, debug_mode, vim_time, scriptnames, **categories):
@@ -57,9 +57,10 @@ class Headlights():
         self.scriptnames = scriptnames
         self.categories = categories
 
+        # for quick profiling, disable
         self.attach_menus()
 
-        # quick profiling
+        # for quick profiling, enable
         #import cProfile
         #self.debug_mode = False
         #cProfile.runctx("self.attach_menus()", globals(), locals())
@@ -95,16 +96,17 @@ class Headlights():
     def gen_menus(self):
         """Add the root menu and coordinate menu categories."""
         root = self.menu_root
+
         for path, properties in self.bundles.items():
             name = properties["name"]
 
-            # ignore leading dots for grouping purposes
+            spillover = self.sanitise_menu(self.get_spillover(name, path))
+
+            # strip leading dots for aesthetic purposes
             if name.startswith("."):
                 name = name[1:]
 
             name = self.sanitise_menu(name)
-
-            spillover = self.sanitise_menu(self.get_spillover(name, path))
 
             prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
 
@@ -499,16 +501,16 @@ class Headlights():
         """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
         root = self.menu_root
 
-        debug_msg = "To enable debug mode, see :help headlights-debug%c"% os.linesep
-        warning_msg = "Warning: Headlights failed to execute menu command. %(debug_msg)s" % locals()
-        error_msg = "Headlights encountered an error. %(debug_msg)s" % locals()
+        DEBUG_MSG = "To enable debug mode, see :help headlights-debug%c"% os.linesep
+        WARNING_MSG = "Warning: Headlights failed to execute menu command. %(DEBUG_MSG)s" % locals()
+        ERROR_MSG = "Headlights encountered an error. %(DEBUG_MSG)s" % locals()
 
         try:
             self.parse_scriptnames()
 
             # parse the menu categories with the similarly named functions
             for key in self.categories.keys():
-                if self.categories[key] is not "":
+                if self.categories[key]:
                     function = getattr(self, "parse_" + key)
                     function(self.categories[key].strip().split("\n"))
 
@@ -518,7 +520,7 @@ class Headlights():
         except Exception:
             import traceback
             self.errors.insert(0, traceback.format_exc())
-            sys.stdout.write(error_msg)
+            sys.stdout.write(ERROR_MSG)
             pass
 
         finally:
@@ -533,7 +535,7 @@ class Headlights():
         vim.command("try | aunmenu %(root)s.⁣⁣buffer | catch /E329/ | endtry" % locals())
 
         # attach the vim menus (and recover gracefully)
-        [vim.command("try | %(menu_command)s | catch // | echomsg('%(warning_msg)s') | endtry" % locals()) for menu_command in self.menus]
+        [vim.command("try | %(menu_command)s | catch // | echomsg('%(WARNING_MSG)s') | endtry" % locals()) for menu_command in self.menus]
 
     def do_debug(self):
         """Attach the debug menu and write the log file."""
