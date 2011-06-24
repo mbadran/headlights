@@ -14,6 +14,10 @@ if !exists('g:headlights_use_plugin_menu')
 endif
 
 " Individual menu components. Enable or disable to preference.
+if !exists('g:headlights_files')
+  let g:headlights_files = 0
+endif
+
 if !exists('g:headlights_commands')
 	let g:headlights_commands = 1
 endif
@@ -81,6 +85,7 @@ function! s:RequestMenus()
       \ menu_root=vim.eval("s:menu_root"),
       \ debug_mode=vim.eval("g:headlights_debug_mode"),
       \ vim_time=time.time() - time_start,
+      \ enable_files=vim.eval("g:headlights_files"),
       \ scriptnames=vim.eval("s:scriptnames"),
       \ commands=vim.eval("s:commands"),
       \ mappings=vim.eval("s:mappings"),
@@ -102,7 +107,7 @@ else
   amenu Bundles.placeholder :
 endif
 
-autocmd BufEnter * call s:RequestMenus()
+autocmd BufEnter,FileType * call s:RequestMenus()
 
 python import vim, time
 " }}}
