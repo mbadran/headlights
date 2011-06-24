@@ -1,11 +1,7 @@
 # encoding: utf-8
 
-# TODO: feature: bring back functions, global only, as an option
-# TODO: disable files and mappings and functions by default
-# TODO: test end use with features disabled
-# TODO: do more profiling and optimisation
 # TODO: write :help doc (including -debug and -issues), and transfer some of the stuff in the readme there
-# TODO: feature: make normal and visual mappings runnable, if it doesn't impact performance too much (test)
+# TODO: do more profiling and optimisation (especially for mappings)
 
 import vim, os, re, sys, time
 
@@ -48,12 +44,13 @@ class Headlights():
         re.compile(r"(\.)?[s-z]", re.IGNORECASE): "s - z"
     }
 
-    def __init__(self, menu_root, debug_mode, vim_time, scriptnames, **categories):
+    def __init__(self, menu_root, debug_mode, vim_time, enable_files, scriptnames, **categories):
         """Initialise the default settings."""
         self.time_start = time.time()
         self.menu_root = menu_root
         self.debug_mode = bool(int(debug_mode))
         self.vim_time = float(vim_time)
+        self.enable_files = bool(int(enable_files))
         self.scriptnames = scriptnames
         self.categories = categories
 
@@ -113,7 +110,8 @@ class Headlights():
             # this needs to be first so sort() can get the script order right
             self.gen_help_menu(name, prefix)
 
-            self.gen_files_menu(path, prefix)
+            if self.enable_files:
+                self.gen_files_menu(path, prefix)
 
             if len(properties["commands"]) > 0:
                 self.gen_commands_menu(properties["commands"], prefix)
@@ -129,9 +127,9 @@ class Headlights():
 
     def gen_commands_menu(self, commands, prefix):
         """Add command menus."""
-        sep_priority = "130"
-        title_priority = "140"
-        item_priority = "150"
+        sep_priority = "110"
+        title_priority = "120"
+        item_priority = "130"
 
         sep_item = "amenu %(sep_priority)s %(prefix)s-Sep1- :" % locals()
         self.menus.append(sep_item)
@@ -150,11 +148,9 @@ class Headlights():
 
     def gen_files_menu(self, path, prefix):
         """Add file menus."""
-        # TODO: improve this. some files via :scriptnames aren't showing up (like?).
-        # TODO: consider adding another piece of metatada: (script) parent -- if a script's parent is the beginning of another bundle's parent, then the first script should be included in the second's menu.
-        sep_priority = "190"
-        title_priority = "200"
-        item_priority = "210"
+        sep_priority = "220"
+        title_priority = "230"
+        item_priority = "240"
 
         sep_item = "amenu %(sep_priority)s %(prefix)s-Sep3- :" % locals()
         self.menus.append(sep_item)
@@ -201,9 +197,9 @@ class Headlights():
 
     def gen_mappings_menu(self, mappings, prefix):
         """Add mapping menus."""
-        sep_priority = "160"
-        title_priority = "170"
-        item_priority = "180"
+        sep_priority = "140"
+        title_priority = "150"
+        item_priority = "160"
 
         sep_item = "amenu %(sep_priority)s %(prefix)s-Sep2- :" % locals()
         self.menus.append(sep_item)
@@ -225,9 +221,9 @@ class Headlights():
 
     def gen_abbreviations_menu(self, abbreviations, prefix):
         """Add abbreviation menus."""
-        sep_priority = "220"
-        title_priority = "230"
-        item_priority = "240"
+        sep_priority = "170"
+        title_priority = "180"
+        item_priority = "190"
 
         sep_item = "amenu %(sep_priority)s %(prefix)s-Sep4- :" % locals()
         self.menus.append(sep_item)
@@ -252,20 +248,32 @@ class Headlights():
 
     def gen_help_menu(self, name, prefix):
         """Add help menus."""
-        title_priority = "110"
-        help_priority = "120"
+        help_priority = "100"
 
-        title_item = "amenu %(title_priority)s %(prefix)sHelp :" % locals()
-        self.menus.append(title_item)
-        disabled_item = "amenu disable %(prefix)sHelp" % locals()
-        self.menus.append(disabled_item)
-
-        help_item = "amenu %(help_priority)s %(prefix)sDoc<Tab>help\ %(name)s :help %(name)s<CR>" % locals()
+        help_item = "amenu %(help_priority)s %(prefix)sHelp<Tab>help\ %(name)s :help %(name)s<CR>" % locals()
         self.menus.append(help_item)
 
     def gen_functions_menu(self, functions, prefix):
         """Add function menus."""
-        # TODO: implement
+        sep_priority = "200"
+        item_priority = "210"
+
+        sep_item = "amenu %(sep_priority)s %(prefix)s-Sep6- :" % locals()
+        self.menus.append(sep_item)
+
+        for function in functions:
+            trunc_function = self.sanitise_menu(function)
+            function_label = ""
+
+            # only show a label if the function name is truncated
+            if len(function) > self.MENU_TRUNC_LIMIT:
+                function_label = trunc_function
+                trunc_function = trunc_function[:self.MENU_TRUNC_LIMIT] + ">"
+
+            function_item = "amenu %(item_priority)s %(prefix)sFunctions.%(trunc_function)s<Tab>%(function_label)s :<CR>" % locals()
+            self.menus.append(function_item)
+            disabled_item = "amenu disable %(prefix)sFunctions.%(trunc_function)s" % locals()
+            self.menus.append(disabled_item)
 
     def gen_debug_menu(self, log_name):
         """Add debug menus."""
@@ -495,7 +503,17 @@ class Headlights():
 
     def parse_functions(self, functions):
         """Extract the functions."""
-        # TODO: implement
+        for i, line in enumerate(functions):
+            # begin with function lines
+            if not line.find(self.SOURCE_LINE) > -1:
+                function = line.split("function ")[1]
+
+                # get the source script from the next list item
+                source_script = self.get_source_script(functions[i+1])
+
+                # add the function to the source script (public functions only)
+                if not function.startswith("<SNR>"):
+                    source_script["functions"].append(function)
 
     def attach_menus(self):
         """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
@@ -535,7 +553,8 @@ class Headlights():
         vim.command("try | aunmenu %(root)s.⁣⁣buffer | catch /E329/ | endtry" % locals())
 
         # attach the vim menus (and recover gracefully)
-        [vim.command("try | %(menu_command)s | catch // | echomsg('%(WARNING_MSG)s') | endtry" % locals()) for menu_command in self.menus]
+        [vim.command("try | %(menu_command)s | catch // | echomsg('%(WARNING_MSG)s') | endtry" % locals())
+                for menu_command in self.menus]
 
     def do_debug(self):
         """Attach the debug menu and write the log file."""
