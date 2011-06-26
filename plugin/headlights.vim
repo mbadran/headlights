@@ -73,27 +73,30 @@ endfunction
 " requests the bundle menus from the helper python script
 " (minimise python spaghetti)
 function! s:RequestVimMenus() " {{{2
-  " time the execution of the vim code
-  python time_start = time.time()
+	" ignore unlisted buffers
+	if buflisted(bufnr('')) != 0
+		" time the execution of the vim code
+		python time_start = time.time()
 
-  " prepare the raw bundle data
-  call s:InitBundleData()
+		" prepare the raw bundle data
+		call s:InitBundleData()
 
-  " load helper python script
-  let l:scriptdir = matchlist(s:scriptnames, '\d\+:\s\+\([^ ]\+\)headlights.vim')[1]
-  execute "pyfile " . l:scriptdir . "headlights.py"
+		" load helper python script
+		let l:scriptdir = matchlist(s:scriptnames, '\d\+:\s\+\([^ ]\+\)headlights.vim')[1]
+		execute "pyfile " . l:scriptdir . "headlights.py"
 
-  " initialise an instance of the helper script
-  python headlights = Headlights(
-      \ menu_root=vim.eval("s:menu_root"),
-      \ debug_mode=vim.eval("g:headlights_debug_mode"),
-      \ vim_time=time.time() - time_start,
-      \ enable_files=vim.eval("g:headlights_files"),
-      \ scriptnames=vim.eval("s:scriptnames"),
-      \ commands=vim.eval("s:commands"),
-      \ mappings=vim.eval("s:mappings"),
-      \ abbreviations=vim.eval("s:abbreviations"),
-      \ functions=vim.eval("s:functions"))
+		" initialise an instance of the helper script
+		python headlights = Headlights(
+				\ menu_root=vim.eval("s:menu_root"),
+				\ debug_mode=vim.eval("g:headlights_debug_mode"),
+				\ vim_time=time.time() - time_start,
+				\ enable_files=vim.eval("g:headlights_files"),
+				\ scriptnames=vim.eval("s:scriptnames"),
+				\ commands=vim.eval("s:commands"),
+				\ mappings=vim.eval("s:mappings"),
+				\ abbreviations=vim.eval("s:abbreviations"),
+				\ functions=vim.eval("s:functions"))
+	endif
 endfunction
 
 " action {{{1
