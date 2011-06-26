@@ -1,13 +1,18 @@
 " Headlights is a Vim plugin that provides a TextMate-like 'Bundles' menu.
+"
 " Version: 1.2
 " Maintainer:	Mohammed Badran <mebadran AT gmail>
 
-if &cp || !has('python') || !has('gui_running') || exists('g:loaded_headlights')
+if &cp || exists('g:loaded_headlights')
+  finish
+endif
+if v:version < 700 || !has('python')
+  echoerr 'Headlights requires Vim 7+ with Python support.'
   finish
 endif
 let g:loaded_headlights = 1
 
-" settings {{{
+" settings {{{1
 " Enable this to reuse the Plugin menu.
 if !exists('g:headlights_use_plugin_menu')
   let g:headlights_use_plugin_menu = 0
@@ -40,11 +45,9 @@ endif
 if !exists('g:headlights_debug_mode')
   let g:headlights_debug_mode = 0
 endif
-" }}}
 
-" functions {{{
-" returns the output of a vim command
-function! s:GetCommandOutput(command)
+" functions {{{1
+function! s:GetVimCommandOutput(command) " {{{2
   " initialise to a blank value in case the command throws a vim error
   " (try-catch doesn't work properly here, for some reason)
   let l:output = ''
@@ -57,19 +60,19 @@ function! s:GetCommandOutput(command)
 endfunction
 
 " prepares the raw bundle data to be transformed into vim menus
-function! s:InitBundleData()
-  let s:scriptnames = s:GetCommandOutput('scriptnames')
+function! s:InitBundleData() " {{{2
+  let s:scriptnames = s:GetVimCommandOutput('scriptnames')
 
   " all categories are disabled by default
-	let s:commands = g:headlights_commands? s:GetCommandOutput('command') : ""
-	let s:mappings = g:headlights_mappings? s:GetCommandOutput('map') : ""
-	let s:abbreviations = g:headlights_abbreviations? s:GetCommandOutput('abbreviate') : ""
-	let s:functions = g:headlights_functions? s:GetCommandOutput('function') : ""
+	let s:commands = g:headlights_commands? s:GetVimCommandOutput('command') : ''
+	let s:mappings = g:headlights_mappings? s:GetVimCommandOutput('map') : ''
+	let s:abbreviations = g:headlights_abbreviations? s:GetVimCommandOutput('abbreviate') : ''
+	let s:functions = g:headlights_functions? s:GetVimCommandOutput('function') : ''
 endfunction
 
 " requests the bundle menus from the helper python script
 " (minimise python spaghetti)
-function! s:RequestMenus()
+function! s:RequestVimMenus() " {{{2
   " time the execution of the vim code
   python time_start = time.time()
 
@@ -91,23 +94,16 @@ function! s:RequestMenus()
       \ mappings=vim.eval("s:mappings"),
       \ abbreviations=vim.eval("s:abbreviations"),
       \ functions=vim.eval("s:functions"))
-
-  if s:menu_root == 'Bundles'
-    try | aunmenu Bundles.placeholder | catch /E329/ | endtry
-  endif
 endfunction
-" }}}
 
-" action {{{
+" action {{{1
 if g:headlights_use_plugin_menu
   let s:menu_root = 'Plugin'
-  amenu Plugin.-Sep- :
+  amenu Plugin.-SepHLM- :
 else
   let s:menu_root = 'Bundles'
-  amenu Bundles.placeholder :
 endif
 
-autocmd BufEnter,FileType * call s:RequestMenus()
+autocmd GUIEnter,BufEnter,FileType * call s:RequestVimMenus()
 
 python import vim, time
-" }}}
