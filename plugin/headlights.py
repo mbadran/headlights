@@ -1,7 +1,8 @@
 # encoding: utf-8
 
+# TODO: test in VM's
 # TODO: write :help doc (including -debug and -issues), and transfer some of the stuff in the readme there
-# TODO: do more profiling and optimisation (especially for mappings)
+# TODO: do more profiling and optimisation for default settings
 
 import vim, os, re, sys, time
 
@@ -30,18 +31,16 @@ class Headlights():
 
     SOURCE_LINE = "Last set from"
 
-    DEFAULT_SPILLOVER = "other"
-
     MENU_TRUNC_LIMIT = 30
 
     sanitise_menu = lambda self, menu: menu.replace("\\", "\\\\").replace("|", "\\|").replace(".", "\\.").replace(" ", "\\ ").replace("<", "\\<")
 
-    spillover_cat_re = {
-        re.compile(r"(\.)?g?vimrc", re.IGNORECASE): "⁣vimrc",
-        re.compile(r"(\.)?\d", re.IGNORECASE): "0 - 9",
-        re.compile(r"(\.)?[a-i]", re.IGNORECASE): "a - i",
-        re.compile(r"(\.)?[j-r]", re.IGNORECASE): "j - r",
-        re.compile(r"(\.)?[s-z]", re.IGNORECASE): "s - z"
+    menu_spillover_patterns = {
+        re.compile(r"\.?g?vimrc", re.IGNORECASE): "⁣vimrc",
+        re.compile(r"\.?\d", re.IGNORECASE): "0 - 9",
+        re.compile(r"\.?[a-i]", re.IGNORECASE): "a - i",
+        re.compile(r"\.?[j-r]", re.IGNORECASE): "j - r",
+        re.compile(r"\.?[s-z]", re.IGNORECASE): "s - z"
     }
 
     def __init__(self, menu_root, debug_mode, vim_time, enable_files, scriptnames, **categories):
@@ -73,17 +72,17 @@ class Headlights():
     def get_spillover(self, name, path):
         """Return an appropriate menu category/spillover parent."""
         # a catch all, just in case
-        spillover = self.DEFAULT_SPILLOVER
+        spillover = "⁣other"
 
         name = name.strip()
 
-        # use an invisible separator (looks like a space) to move menus to the bottom
+        # use empty chars (looks like space) to move menus to the bottom
         if self.bundles[path]["buffer"]:
             spillover = "⁣⁣buffer"
         elif path.lower().find("runtime") > -1:
             spillover = "⁣runtime"
         else:
-            for pattern, category in self.spillover_cat_re.items():
+            for pattern, category in self.menu_spillover_patterns.items():
                 if pattern.match(name):
                     spillover = category
                     break
@@ -127,9 +126,9 @@ class Headlights():
 
     def gen_commands_menu(self, commands, prefix):
         """Add command menus."""
-        sep_priority = "110"
-        title_priority = "120"
-        item_priority = "130"
+        sep_priority = "9997.110"
+        title_priority = "9997.120"
+        item_priority = "9997.130"
 
         sep_item = "amenu %(sep_priority)s %(prefix)s-Sep1- :" % locals()
         self.menus.append(sep_item)
@@ -148,9 +147,9 @@ class Headlights():
 
     def gen_files_menu(self, path, prefix):
         """Add file menus."""
-        sep_priority = "220"
-        title_priority = "230"
-        item_priority = "240"
+        sep_priority = "9997.220"
+        title_priority = "9997.230"
+        item_priority = "9997.240"
 
         sep_item = "amenu %(sep_priority)s %(prefix)s-Sep3- :" % locals()
         self.menus.append(sep_item)
@@ -197,9 +196,9 @@ class Headlights():
 
     def gen_mappings_menu(self, mappings, prefix):
         """Add mapping menus."""
-        sep_priority = "140"
-        title_priority = "150"
-        item_priority = "160"
+        sep_priority = "9997.140"
+        title_priority = "9997.150"
+        item_priority = "9997.160"
 
         sep_item = "amenu %(sep_priority)s %(prefix)s-Sep2- :" % locals()
         self.menus.append(sep_item)
@@ -221,9 +220,9 @@ class Headlights():
 
     def gen_abbreviations_menu(self, abbreviations, prefix):
         """Add abbreviation menus."""
-        sep_priority = "170"
-        title_priority = "180"
-        item_priority = "190"
+        sep_priority = "9997.170"
+        title_priority = "9997.180"
+        item_priority = "9997.190"
 
         sep_item = "amenu %(sep_priority)s %(prefix)s-Sep4- :" % locals()
         self.menus.append(sep_item)
@@ -248,15 +247,15 @@ class Headlights():
 
     def gen_help_menu(self, name, prefix):
         """Add help menus."""
-        help_priority = "100"
+        help_priority = "9997.100"
 
         help_item = "amenu %(help_priority)s %(prefix)sHelp<Tab>help\ %(name)s :help %(name)s<CR>" % locals()
         self.menus.append(help_item)
 
     def gen_functions_menu(self, functions, prefix):
         """Add function menus."""
-        sep_priority = "200"
-        item_priority = "210"
+        sep_priority = "9997.200"
+        item_priority = "9997.210"
 
         sep_item = "amenu %(sep_priority)s %(prefix)s-Sep6- :" % locals()
         self.menus.append(sep_item)
@@ -277,17 +276,17 @@ class Headlights():
 
     def gen_debug_menu(self, log_name):
         """Add debug menus."""
-        sep_priority = "300"
-        open_priority = "310"
-        sexplore_priority = "320"
-        explore_priority = "330"
+        sep_priority = "9997.300"
+        open_priority = "9997.310"
+        sexplore_priority = "9997.320"
+        explore_priority = "9997.330"
 
         log_name_label = self.sanitise_menu(log_name)
         log_dir = os.path.dirname(log_name)
 
         root = self.menu_root
 
-        sep_item = "amenu %(sep_priority)s %(root)s.-SepX- :" % locals()
+        sep_item = "amenu %(sep_priority)s %(root)s.-SepHLD- :" % locals()
         self.menus.append(sep_item)
 
         if sys.platform == "darwin":
@@ -519,9 +518,13 @@ class Headlights():
         """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
         root = self.menu_root
 
-        DEBUG_MSG = "To enable debug mode, see :help headlights-debug%c"% os.linesep
+        if self.debug_mode:
+            DEBUG_MSG = "See the debug log for details.%c" % os.linesep
+        else:
+            DEBUG_MSG = "To enable debug mode, see :help headlights-debug%c" % os.linesep
+
         WARNING_MSG = "Warning: Headlights failed to execute menu command. %(DEBUG_MSG)s" % locals()
-        ERROR_MSG = "Headlights encountered an error. %(DEBUG_MSG)s" % locals()
+        ERROR_MSG = "Headlights encountered a fatal error. %(DEBUG_MSG)s" % locals()
 
         try:
             self.parse_scriptnames()
@@ -553,7 +556,7 @@ class Headlights():
         vim.command("try | aunmenu %(root)s.⁣⁣buffer | catch /E329/ | endtry" % locals())
 
         # attach the vim menus (and recover gracefully)
-        [vim.command("try | %(menu_command)s | catch // | echomsg('%(WARNING_MSG)s') | endtry" % locals())
+        [vim.command("try | %(menu_command)s | catch // | echomsg '%(WARNING_MSG)s' | endtry" % locals())
                 for menu_command in self.menus]
 
     def do_debug(self):
