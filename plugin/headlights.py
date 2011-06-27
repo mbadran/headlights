@@ -1,14 +1,14 @@
 # encoding: utf-8
 
-# TODO: test in VM's
 # TODO: write :help doc (including -debug and -issues), and transfer some of the stuff in the readme there
 # TODO: do more profiling and optimisation for default settings
+# TODO: test in VM's
 
 import vim, os, re, sys, time
 
 class Headlights():
     """
-    Python helper class to generate menus for headlights.vim. See README.mkd for details.
+    Python helper class to generate menus for Headlights.vim. See README.mkd for details.
     Version: 1.2
     Maintainer:	Mohammed Badran <mebadran AT gmail>
     """
@@ -34,6 +34,9 @@ class Headlights():
     MENU_TRUNC_LIMIT = 30
 
     sanitise_menu = lambda self, menu: menu.replace("\\", "\\\\").replace("|", "\\|").replace(".", "\\.").replace(" ", "\\ ").replace("<", "\\<")
+
+    # required for forwards compatibility
+    expand_home = lambda self, path: os.getenv("HOME") + path[1:] if path.startswith("~") else path
 
     menu_spillover_patterns = {
         re.compile(r"\.?g?vimrc", re.IGNORECASE): "⁣vimrc",
@@ -315,18 +318,20 @@ class Headlights():
     def get_source_script(self, line):
         """Extract the source script from the line and return the bundle."""
         script_path = line.replace(self.SOURCE_LINE, "").strip()
-        if script_path.startswith("~"):
-            script_path = os.getenv("HOME") + script_path[1:]
 
-        return self.bundles.get(script_path)
+        return self.bundles.get(self.expand_home(script_path))
 
     def parse_scriptnames(self):
         """Extract the bundles (aka scripts/plugins)."""
         self.scriptnames = self.scriptnames.strip().split("\n")
 
+        pattern = re.compile(r"\s*\d+:\s")
+
         for path in self.scriptnames:
-            path = path[path.find("/"):]
-            self.init_bundle(path)
+            # strip leading indexes
+            path = pattern.sub("", path)
+
+            self.init_bundle(self.expand_home(path))
 
     def parse_commands(self, commands):
         """Extract the commands."""
