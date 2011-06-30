@@ -1,15 +1,16 @@
 " Headlights is a Vim plugin that provides a TextMate-like 'Bundles' menu.
-"
 " Version: 1.2
-" Maintainer:	Mohammed Badran <mebadran AT gmail>
+" Maintainer:	Mohammed Badran <github.com/mbadran/headlights>
 
 if &cp || exists('g:loaded_headlights')
   finish
 endif
+
 if v:version < 700 || !has('python')
-  echoerr 'Headlights requires Vim 7+ with Python support.'
+  echoerr 'Headlights requires Vim 7+ compiled with Python 2.6+ support.'
   finish
 endif
+
 let g:loaded_headlights = 1
 
 " settings {{{1
@@ -28,7 +29,7 @@ if !exists('g:headlights_commands')
 endif
 
 if !exists('g:headlights_mappings')
-  let g:headlights_mappings = 0
+  let g:headlights_mappings = 1
 endif
 
 if !exists('g:headlights_abbreviations')
@@ -106,4 +107,5 @@ endif
 
 autocmd GUIEnter,BufEnter,FileType * call s:RequestVimMenus()
 
-python import vim, time
+" do the python imports here for performance reasons
+python import vim, time, sys, os, re
