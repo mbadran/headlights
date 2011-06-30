@@ -2,15 +2,13 @@
 
 # TODO: write :help doc (including -debug and -issues), and transfer some of the stuff in the readme there
 # TODO: do more profiling and optimisation for default settings
-# TODO: test in VM's
-
-import vim, os, re, sys, time
+# TODO: do more testing in linux and windows VM's
 
 class Headlights():
     """
     Python helper class to generate menus for Headlights.vim. See README.mkd for details.
     Version: 1.2
-    Maintainer:	Mohammed Badran <mebadran AT gmail>
+    Maintainer:	Mohammed Badran <github.com/mbadran/headlights>
     """
     bundles = {}
     menus = []
@@ -35,7 +33,7 @@ class Headlights():
 
     sanitise_menu = lambda self, menu: menu.replace("\\", "\\\\").replace("|", "\\|").replace(".", "\\.").replace(" ", "\\ ").replace("<", "\\<")
 
-    # required for forwards compatibility
+    # required for forwards vim compatibility
     expand_home = lambda self, path: os.getenv("HOME") + path[1:] if path.startswith("~") else path
 
     menu_spillover_patterns = {
@@ -85,7 +83,7 @@ class Headlights():
         elif path.lower().find("runtime") > -1:
             spillover = "⁣runtime"
         else:
-            for pattern, category in self.menu_spillover_patterns.items():
+            for pattern, category in list(self.menu_spillover_patterns.items()):
                 if pattern.match(name):
                     spillover = category
                     break
@@ -96,7 +94,7 @@ class Headlights():
         """Add the root menu and coordinate menu categories."""
         root = self.menu_root
 
-        for path, properties in self.bundles.items():
+        for path, properties in list(self.bundles.items()):
             name = properties["name"]
 
             spillover = self.sanitise_menu(self.get_spillover(name, path))
@@ -142,8 +140,8 @@ class Headlights():
         self.menus.append(disabled_item)
 
         for command in commands:
-            name = self.sanitise_menu(command.keys()[0])
-            definition = self.sanitise_menu(command[command.keys()[0]])
+            name = self.sanitise_menu(list(command.keys())[0])
+            definition = self.sanitise_menu(command[list(command.keys())[0]])
 
             command_item = "amenu %(item_priority)s %(prefix)s%(name)s<Tab>:%(definition)s :%(name)s<CR>" % locals()
             self.menus.append(command_item)
@@ -535,7 +533,7 @@ class Headlights():
             self.parse_scriptnames()
 
             # parse the menu categories with the similarly named functions
-            for key in self.categories.keys():
+            for key in list(self.categories.keys()):
                 if self.categories[key]:
                     function = getattr(self, "parse_" + key)
                     function(self.categories[key].strip().split("\n"))
@@ -582,7 +580,7 @@ class Headlights():
         platform = platform.platform()
         errors = "\n".join(self.errors)
         scriptnames = "\n".join(self.scriptnames)
-        categories = "\n\n".join("%s:%s" % (key.upper(), self.categories[key]) for key in self.categories.keys())
+        categories = "\n\n".join("%s:%s" % (key.upper(), self.categories[key]) for key in list(self.categories.keys()))
         menus = "\n".join(self.menus)
         vim_time = self.vim_time
         python_time = time.time() - self.time_start
