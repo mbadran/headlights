@@ -97,7 +97,6 @@ function! s:RequestVimMenus() " {{{2
 endfunction
 
 " action {{{1
-" find this script's dir
 let s:scriptdir = expand("<sfile>:h") . '/'
 
 " set the root menu
@@ -110,5 +109,5 @@ endif
 
 autocmd GUIEnter,BufEnter,FileType * call s:RequestVimMenus()
 
-" do the python imports here for performance reasons
+" imports are done here for performance reasons
 python import vim, time, sys, os, re
