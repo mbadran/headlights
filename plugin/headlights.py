@@ -1,8 +1,6 @@
 # encoding: utf-8
 
-# TODO: write :help doc (including -debug and -issues), and transfer some of the stuff in the readme there
-# TODO: do more profiling and optimisation for default settings
-# TODO: do more testing in linux and windows VM's
+#import os, re, time, sys       # imported in headlights.vim
 
 class Headlights():
     """
@@ -37,7 +35,6 @@ class Headlights():
     expand_home = lambda self, path: os.getenv("HOME") + path[1:] if path.startswith("~") else path
 
     menu_spillover_patterns = {
-        re.compile(r"\.?g?vimrc", re.IGNORECASE): "⁣vimrc",
         re.compile(r"\.?\d", re.IGNORECASE): "0 - 9",
         re.compile(r"\.?[a-i]", re.IGNORECASE): "a - i",
         re.compile(r"\.?[j-r]", re.IGNORECASE): "j - r",
@@ -46,6 +43,7 @@ class Headlights():
 
     def __init__(self, menu_root, debug_mode, vim_time, enable_files, scriptnames, **categories):
         """Initialise the default settings."""
+
         self.time_start = time.time()
         self.menu_root = menu_root
         self.debug_mode = bool(int(debug_mode))
@@ -64,6 +62,7 @@ class Headlights():
 
     def init_bundle(self, path):
         """Initialise new bundles (aka scripts/plugins)."""
+
         name = os.path.splitext(os.path.basename(path))[0]
 
         self.bundles[path] = {"name": name, "commands": [], "mappings": [], "abbreviations": [], "functions": [], "buffer": False}
@@ -72,13 +71,17 @@ class Headlights():
 
     def get_spillover(self, name, path):
         """Return an appropriate menu category/spillover parent."""
+
         # a catch all, just in case
         spillover = "⁣other"
 
         name = name.strip()
 
         # use empty chars (looks like space) to move menus to the bottom
-        if self.bundles[path]["buffer"]:
+        # and exclude vimrc files from buffer local menus (for simplicity)
+        if self.bundles[path]["name"].endswith("vimrc"):
+            spillover = "⁣vimrc"
+        elif self.bundles[path]["buffer"]:
             spillover = "⁣⁣buffer"
         elif path.lower().find("runtime") > -1:
             spillover = "⁣runtime"
@@ -92,6 +95,7 @@ class Headlights():
 
     def gen_menus(self):
         """Add the root menu and coordinate menu categories."""
+
         root = self.menu_root
 
         for path, properties in list(self.bundles.items()):
@@ -127,6 +131,7 @@ class Headlights():
 
     def gen_commands_menu(self, commands, prefix):
         """Add command menus."""
+
         sep_priority = "9997.110"
         title_priority = "9997.120"
         item_priority = "9997.130"
@@ -148,6 +153,7 @@ class Headlights():
 
     def gen_files_menu(self, path, prefix):
         """Add file menus."""
+
         sep_priority = "9997.220"
         title_priority = "9997.230"
         item_priority = "9997.240"
@@ -197,6 +203,7 @@ class Headlights():
 
     def gen_mappings_menu(self, mappings, prefix):
         """Add mapping menus."""
+
         sep_priority = "9997.140"
         title_priority = "9997.150"
         item_priority = "9997.160"
@@ -221,6 +228,7 @@ class Headlights():
 
     def gen_abbreviations_menu(self, abbreviations, prefix):
         """Add abbreviation menus."""
+
         sep_priority = "9997.170"
         title_priority = "9997.180"
         item_priority = "9997.190"
@@ -241,13 +249,15 @@ class Headlights():
             if len(lhs) > self.MENU_TRUNC_LIMIT:
                 trunc_lhs = lhs[:self.MENU_TRUNC_LIMIT] + ">"
 
-            abbr_item = "amenu %(item_priority)s %(prefix)s%(mode)s.%(trunc_lhs)s<Tab>%(rhs)s :<CR>" % locals()
+            # prefix mode with an invisible char so vim can create mode menus separate from mappings'
+            abbr_item = "amenu %(item_priority)s %(prefix)s⁣%(mode)s.%(trunc_lhs)s<Tab>%(rhs)s :<CR>" % locals()
             self.menus.append(abbr_item)
-            disabled_item = "amenu disable %(prefix)s%(mode)s.%(trunc_lhs)s" % locals()
+            disabled_item = "amenu disable %(prefix)s⁣%(mode)s.%(trunc_lhs)s" % locals()
             self.menus.append(disabled_item)
 
     def gen_help_menu(self, name, prefix):
         """Add help menus."""
+
         help_priority = "9997.100"
 
         help_item = "amenu %(help_priority)s %(prefix)sHelp<Tab>help\ %(name)s :help %(name)s<CR>" % locals()
@@ -255,6 +265,7 @@ class Headlights():
 
     def gen_functions_menu(self, functions, prefix):
         """Add function menus."""
+
         sep_priority = "9997.200"
         item_priority = "9997.210"
 
@@ -277,6 +288,7 @@ class Headlights():
 
     def gen_debug_menu(self, log_name):
         """Add debug menus."""
+
         sep_priority = "9997.300"
         open_priority = "9997.310"
         sexplore_priority = "9997.320"
@@ -315,12 +327,14 @@ class Headlights():
 
     def get_source_script(self, line):
         """Extract the source script from the line and return the bundle."""
+
         script_path = line.replace(self.SOURCE_LINE, "").strip()
 
         return self.bundles.get(self.expand_home(script_path))
 
     def parse_scriptnames(self):
         """Extract the bundles (aka scripts/plugins)."""
+
         self.scriptnames = self.scriptnames.strip().split("\n")
 
         pattern = re.compile(r"\s*\d+:\s")
@@ -333,17 +347,24 @@ class Headlights():
 
     def parse_commands(self, commands):
         """Extract the commands."""
+
         pattern = re.compile(r'''
             ^
-            (?P<bang>!\s+)?
-            (?P<register>"\s+)?
+            (?P<bang>!)?
+            \s*
+            (?P<register>")?
+            \s*
             (?P<buffer>b\s+)?
-            (?P<name>\w+\s+)
-            (?P<args>[01+?*]\s+)?
-            (?P<range>(\.|1c|%|0c)\s+)?
-            (?P<complete>(dir|file|buffer)\s+)?
+            (?P<name>[\S]+)
+            \s+
+            (?P<args>[01+?*])?
+            \s*
+            (?P<range>(\.|1c|%|0c))?
+            \s*
+            (?P<complete>(dir|file|buffer))?
+            \s*
             :?
-            (?P<definition>[a-z].+)?
+            (?P<definition>.+)?
             $
             ''', re.VERBOSE | re.IGNORECASE)
 
@@ -351,19 +372,36 @@ class Headlights():
         commands = commands[1:]
 
         for i, line in enumerate(commands):
-            line = line.strip()
-
             # begin with command lines
             if not line.find(self.SOURCE_LINE) > -1:
                 matches = pattern.match(line)
 
                 try:
-                    command = matches.group("name").strip()
+                    command = matches.group("name")
                 except AttributeError:
                     self.errors.append("parse_commands: no command name found in command '%(line)s'" % locals())
                     continue
 
                 definition = matches.group("definition")
+
+                #print("line: %s" % line)
+                #if matches.group("bang"):
+                    #print("bang: '%s'" % matches.group("bang"))
+                #if matches.group("register"):
+                    #print("register: '%s'" % matches.group("register"))
+                #if matches.group("buffer"):
+                    #print("buffer: '%s'" % matches.group("buffer"))
+                #if matches.group("name"):
+                    #print("name: '%s'" % matches.group("name"))
+                #if matches.group("args"):
+                    #print("args: '%s'" % matches.group("args"))
+                #if matches.group("range"):
+                    #print("range: '%s'" % matches.group("range"))
+                #if matches.group("complete"):
+                    #print("complete: '%s'" % matches.group("complete"))
+                #if matches.group("definition"):
+                    #print("definition: '%s'" % matches.group("definition"))
+                #print("----------")
 
                 # a vim command can be declared with no definition (just a :)
                 try:
@@ -390,6 +428,7 @@ class Headlights():
 
     def parse_modes(self, mode):
         """Return a list of all the modes."""
+
         # restore empty mode to original value (space)
         if not mode:
             mode = " "
@@ -404,6 +443,7 @@ class Headlights():
 
     def parse_mappings(self, mappings):
         """Extract the mappings."""
+
         pattern = re.compile(r'''
             ^
             (?P<modes>[nvsxo!ilc]+)?
@@ -424,7 +464,7 @@ class Headlights():
                 matches = pattern.match(line)
 
                 try:
-                    lhs = matches.group("lhs").strip()
+                    lhs = matches.group("lhs")
                 except AttributeError:
                     self.errors.append("parse_mappings: lhs not found for mapping '%(line)s'" % locals())
                     continue
@@ -459,12 +499,17 @@ class Headlights():
 
     def parse_abbreviations(self, abbreviations):
         """Extract the abbreviations."""
+
         pattern = re.compile(r'''
             ^
             (?P<modes>[nvsxo!ilc]+)?
             \s*
             (?P<lhs>[\S]+)
             \s+
+            (?P<noremap>\*)?
+            (?P<script>&)?
+            (?P<buffer>@)?
+            \s*
             (?P<rhs>.+)
             $
             ''', re.VERBOSE | re.IGNORECASE)
@@ -475,7 +520,7 @@ class Headlights():
                 matches = pattern.match(line)
 
                 try:
-                    lhs = matches.group("lhs").strip()
+                    lhs = matches.group("lhs")
                 except AttributeError:
                     self.errors.append("parse_abbreviations: lhs not found for abbreviation '%(line)s'" % locals())
                     continue
@@ -492,7 +537,12 @@ class Headlights():
                 try:
                     source_script = self.get_source_script(abbreviations[i+1])
 
-                    # add the abbreviations to the source script
+                    # flag the bundle as buffer local, and prepend an indicator to the mapping
+                    if matches.group("buffer"):
+                        lhs = "@ " + lhs
+                        source_script["buffer"] = True
+
+                    # add the abbreviation to the source script
                     for mode in modes:
                         source_script["abbreviations"].append([mode, lhs, rhs])
 
@@ -505,6 +555,7 @@ class Headlights():
 
     def parse_functions(self, functions):
         """Extract the functions."""
+
         for i, line in enumerate(functions):
             # begin with function lines
             if not line.find(self.SOURCE_LINE) > -1:
@@ -519,6 +570,7 @@ class Headlights():
 
     def attach_menus(self):
         """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
+
         root = self.menu_root
 
         if self.debug_mode:
@@ -553,6 +605,8 @@ class Headlights():
 
         self.menus.sort(key=lambda menu: menu.lower())
 
+        #import vim
+
         # only reset the buffer submenu, if it exists
         # this is faster than resetting everything, as it seems that vim will only attach new menus
         # annoying side effect: new menus (for eg, via autoload) will go to the bottom and mess up the sorting
@@ -564,6 +618,7 @@ class Headlights():
 
     def do_debug(self):
         """Attach the debug menu and write the log file."""
+
         import tempfile, platform
 
         LOGNAME_PREFIX = "headlights_"
