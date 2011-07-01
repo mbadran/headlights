@@ -81,8 +81,7 @@ function! s:RequestVimMenus() " {{{2
 	call s:InitBundleData()
 
 	" load helper python script
-	let l:scriptdir = matchlist(s:scriptnames, '\d\+:\s\+\([^ ]\+\)headlights.vim')[1]
-	execute "pyfile " . l:scriptdir . "headlights.py"
+  execute "pyfile " . s:scriptdir . "headlights.py"
 
 	" initialise an instance of the helper script
 	python headlights = Headlights(
@@ -98,6 +97,10 @@ function! s:RequestVimMenus() " {{{2
 endfunction
 
 " action {{{1
+" find this script's dir
+let s:scriptdir = expand("<sfile>:h") . '/'
+
+" set the root menu
 if g:headlights_use_plugin_menu
   let s:menu_root = 'Plugin'
   amenu Plugin.-SepHLM- :
