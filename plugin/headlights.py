@@ -384,25 +384,6 @@ class Headlights():
 
                 definition = matches.group("definition")
 
-                #print("line: %s" % line)
-                #if matches.group("bang"):
-                    #print("bang: '%s'" % matches.group("bang"))
-                #if matches.group("register"):
-                    #print("register: '%s'" % matches.group("register"))
-                #if matches.group("buffer"):
-                    #print("buffer: '%s'" % matches.group("buffer"))
-                #if matches.group("name"):
-                    #print("name: '%s'" % matches.group("name"))
-                #if matches.group("args"):
-                    #print("args: '%s'" % matches.group("args"))
-                #if matches.group("range"):
-                    #print("range: '%s'" % matches.group("range"))
-                #if matches.group("complete"):
-                    #print("complete: '%s'" % matches.group("complete"))
-                #if matches.group("definition"):
-                    #print("definition: '%s'" % matches.group("definition"))
-                #print("----------")
-
                 # a vim command can be declared with no definition (just a :)
                 try:
                     definition = definition.strip()
