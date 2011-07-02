@@ -1,8 +1,12 @@
-" Headlights is a Vim plugin that provides a TextMate-like 'Bundles' menu.
+" Headlights - A 'Bundles' menu on steroids.
 " Version: 1.2
-" Maintainer:	Mohammed Badran <github.com/mbadran/headlights>
+" HQ: <http://www.vim.org/scripts/script.php?script_id=3455>
+" Source:	<github.com/mbadran/headlights>
+" Maintainer:	Mohammed Badran <mebadran _AT_ gmail>
 
-if &cp || exists('g:loaded_headlights')
+" boilerplate {{{1
+
+if exists('g:loaded_headlights') || &cp
   finish
 endif
 
@@ -13,42 +17,29 @@ endif
 
 let g:loaded_headlights = 1
 
-" settings {{{1
-" Enable this to reuse the Plugin menu.
-if !exists('g:headlights_use_plugin_menu')
-  let g:headlights_use_plugin_menu = 0
-endif
+" configuration {{{1
 
-" Individual menu components. Enable or disable to preference.
-if !exists('g:headlights_files')
-  let g:headlights_files = 0
-endif
+" only commands and mappings are enabled by default
+let s:use_plugin_menu = exists('g:headlights_use_plugin_menu')? g:headlights_use_plugin_menu : 0
+let s:show_files = exists('g:headlights_show_files')? g:headlights_show_files : 0
+let s:show_commands = exists('g:headlights_show_commands')? g:headlights_show_commands : 1
+let s:show_mappings = exists('g:headlights_show_mappings')? g:headlights_show_mappings : 1
+let s:show_abbreviations = exists('g:headlights_show_abbreviations')? g:headlights_show_abbreviations : 0
+let s:show_functions = exists('g:headlights_show_functions')? g:headlights_show_functions : 0
+let s:debug_mode = exists('g:headlights_debug_mode')? g:headlights_debug_mode : 0
 
-if !exists('g:headlights_commands')
-	let g:headlights_commands = 1
-endif
+let s:menu_root = s:use_plugin_menu? 'Plugin.headlights' : 'Bundles'
 
-if !exists('g:headlights_mappings')
-  let g:headlights_mappings = 1
-endif
+let s:scriptdir = expand("<sfile>:h") . '/'
 
-if !exists('g:headlights_abbreviations')
-  let g:headlights_abbreviations = 0
-endif
+" action {{{1
 
-if !exists('g:headlights_functions')
-  let g:headlights_functions = 0
-endif
+autocmd GUIEnter,BufEnter,FileType * call s:RequestVimMenus()
 
-" Debug mode. Enable to debug any errors or performance issues.
-" IMPORTANT: Set this to 0 when you're done, otherwise log files will be
-" generated every time you enter a buffer.
-if !exists('g:headlights_debug_mode')
-  let g:headlights_debug_mode = 0
-endif
+" imports are done here for performance reasons
+python import vim, time, sys, os, re
 
-" functions {{{1
-function! s:GetVimCommandOutput(command) " {{{2
+function! s:GetVimCommandOutput(command) " {{{1
   " initialise to a blank value in case the command throws a vim error
   " (try-catch doesn't work properly here, for some reason)
   let l:output = ''
@@ -61,19 +52,17 @@ function! s:GetVimCommandOutput(command) " {{{2
 endfunction
 
 " prepares the raw bundle data to be transformed into vim menus
-function! s:InitBundleData() " {{{2
+function! s:InitBundleData() " {{{1
   let s:scriptnames = s:GetVimCommandOutput('scriptnames')
-
-  " all categories are disabled by default
-	let s:commands = g:headlights_commands? s:GetVimCommandOutput('command') : ''
-	let s:mappings = g:headlights_mappings? s:GetVimCommandOutput('map') : ''
-	let s:abbreviations = g:headlights_abbreviations? s:GetVimCommandOutput('abbreviate') : ''
-	let s:functions = g:headlights_functions? s:GetVimCommandOutput('function') : ''
+  let s:commands = s:show_commands? s:GetVimCommandOutput('command') : ''
+	let s:mappings = s:show_mappings? s:GetVimCommandOutput('map') : ''
+	let s:abbreviations = s:show_abbreviations? s:GetVimCommandOutput('abbreviate') : ''
+	let s:functions = s:show_functions? s:GetVimCommandOutput('function') : ''
 endfunction
 
 " requests the bundle menus from the helper python script
 " (minimise python spaghetti)
-function! s:RequestVimMenus() " {{{2
+function! s:RequestVimMenus() " {{{1
 	" time the execution of the vim code
 	python time_start = time.time()
 
@@ -81,33 +70,17 @@ function! s:RequestVimMenus() " {{{2
 	call s:InitBundleData()
 
 	" load helper python script
-  execute "pyfile " . s:scriptdir . "headlights.py"
+  execute 'pyfile ' . s:scriptdir . 'headlights.py'
 
 	" initialise an instance of the helper script
 	python headlights = Headlights(
 			\ menu_root=vim.eval("s:menu_root"),
-			\ debug_mode=vim.eval("g:headlights_debug_mode"),
+			\ debug_mode=vim.eval("s:debug_mode"),
 			\ vim_time=time.time() - time_start,
-			\ enable_files=vim.eval("g:headlights_files"),
+			\ enable_files=vim.eval("s:show_files"),
 			\ scriptnames=vim.eval("s:scriptnames"),
 			\ commands=vim.eval("s:commands"),
 			\ mappings=vim.eval("s:mappings"),
 			\ abbreviations=vim.eval("s:abbreviations"),
 			\ functions=vim.eval("s:functions"))
 endfunction
-
-" action {{{1
-let s:scriptdir = expand("<sfile>:h") . '/'
-
-" set the root menu
-if g:headlights_use_plugin_menu
-  let s:menu_root = 'Plugin'
-  amenu Plugin.-SepHLM- :
-else
-  let s:menu_root = 'Bundles'
-endif
-
-autocmd GUIEnter,BufEnter,FileType * call s:RequestVimMenus()
-
-" imports are done here for performance reasons
-python import vim, time, sys, os, re
