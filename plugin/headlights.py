@@ -4,9 +4,8 @@
 
 class Headlights():
     """
-    Python helper class to generate menus for Headlights.vim. See README.mkd for details.
+    Python helper class for headlights.vim
     Version: 1.2
-    Maintainer:	Mohammed Badran <github.com/mbadran/headlights>
     """
     bundles = {}
     menus = []
@@ -553,14 +552,15 @@ class Headlights():
         """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
 
         root = self.menu_root
+        sep = os.linesep
 
-        if self.debug_mode:
-            DEBUG_MSG = "See the debug log for details.%c" % os.linesep
-        else:
-            DEBUG_MSG = "To enable debug mode, see :help headlights-debug%c" % os.linesep
+        DEBUG_MSG = "See the '%(root)s > debug' menu for details.%(sep)c" % locals()
+        ERROR_MSG = "Headlights encountered a fatal error. %(DEBUG_MSG)s" % locals()
+
+        if not self.debug_mode:
+            DEBUG_MSG = "To enable debug mode, see :help headlights-debug%(sep)c" % locals()
 
         WARNING_MSG = "Warning: Headlights failed to execute menu command. %(DEBUG_MSG)s" % locals()
-        ERROR_MSG = "Headlights encountered a fatal error. %(DEBUG_MSG)s" % locals()
 
         try:
             self.parse_scriptnames()
@@ -578,6 +578,7 @@ class Headlights():
             import traceback
             self.errors.insert(0, traceback.format_exc())
             sys.stdout.write(ERROR_MSG)
+            self.do_debug()
             pass
 
         finally:
@@ -585,8 +586,6 @@ class Headlights():
                 self.do_debug()
 
         self.menus.sort(key=lambda menu: menu.lower())
-
-        #import vim
 
         # only reset the buffer submenu, if it exists
         # this is faster than resetting everything, as it seems that vim will only attach new menus
@@ -608,7 +607,7 @@ class Headlights():
         log_file = tempfile.NamedTemporaryFile(prefix=LOGNAME_PREFIX, suffix=LOGNAME_SUFFIX, delete=False)
 
         # in case the menu doesn't get added
-        sys.stdout.write("Headlights debug log: %s%c" % (log_file.name, os.linesep))
+        #sys.stdout.write("Headlights debug log: %s%c" % (log_file.name, os.linesep))
 
         self.gen_debug_menu(log_file.name)
 
