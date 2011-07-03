@@ -1,6 +1,6 @@
-" Headlights - A 'Bundles' menu on steroids.
+" Headlights - One 'Bundles' menu to rule them all.
 " Version: 1.2
-" HQ: <http://www.vim.org/scripts/script.php?script_id=3455>
+" Home: <www.vim.org/scripts/script.php?script_id=3455>
 " Source:	<github.com/mbadran/headlights>
 " Maintainer:	Mohammed Badran <mebadran _AT_ gmail>
 
