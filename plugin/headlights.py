@@ -180,25 +180,26 @@ class Headlights():
         if sys.platform == "darwin":
             open_cmd = "!open -a MacVim"
             reveal_cmd = "!open"
-        elif sys.platform == "win32":
-            open_cmd = "!start gvim"
-            reveal_cmd = "!start"
-        elif sys.platform == "linux2":
-            open_cmd = "!xdg-open vim"
-            reveal_cmd = "!xdg-open"
+        #elif sys.platform == "win32":
+            #open_cmd = "!start gvim"
+            #reveal_cmd = "!start"
+        #elif sys.platform == "linux2":
+            #open_cmd = "!xdg-open vim"
+            #reveal_cmd = "!xdg-open"
         else:
             open_cmd = "edit"
-            reveal_cmd = ""
 
         open_item = "amenu %(item_priority)s.10 %(prefix)s%(trunc_file_path)s.Open\ File<Tab>%(file_path)s :%(open_cmd)s %(file_path_cmd)s<CR>" % locals()
         self.menus.append(open_item)
 
-        sexplore_item = "amenu %(item_priority)s.20 %(prefix)s%(trunc_file_path)s.Sexplore\ in\ Vim<Tab>%(file_dir_path)s :Sexplore %(file_dir_path_cmd)s<CR>" % locals()
-        self.menus.append(sexplore_item)
+        explore_item = "amenu %(item_priority)s.20 %(prefix)s%(trunc_file_path)s.Explore\ in\ Vim<Tab>%(file_dir_path)s :Sexplore %(file_dir_path_cmd)s<CR>" % locals()
+        self.menus.append(explore_item)
 
-        if reveal_cmd:
+        try:
             reveal_item = "amenu %(item_priority)s.30 %(prefix)s%(trunc_file_path)s.Explore\ in\ System<Tab>%(file_dir_path)s :%(reveal_cmd)s %(file_dir_path_cmd)s<CR>" % locals()
             self.menus.append(reveal_item)
+        except KeyError:
+            pass    # no reveal item for this platform
 
     def gen_mappings_menu(self, mappings, prefix):
         """Add mapping menus."""
@@ -304,25 +305,26 @@ class Headlights():
         if sys.platform == "darwin":
             open_log_cmd = "!open -a MacVim"
             reveal_log_cmd = "!open"
-        elif sys.platform == "win32":
-            open_log_cmd = "!start gvim"
-            reveal_log_cmd = "!start"
-        elif sys.platform == "linux2":
-            open_log_cmd = "!xdg-open vim"
-            reveal_log_cmd = "!xdg-open"
+        #elif sys.platform == "win32":
+            #open_log_cmd = "!start gvim"
+            #reveal_log_cmd = "!start"
+        #elif sys.platform == "linux2":
+            #open_log_cmd = "!xdg-open vim"
+            #reveal_log_cmd = "!xdg-open"
         else:
             open_log_cmd = "edit"
-            reveal_log_cmd = ""
 
         open_item = "amenu %(open_priority)s %(root)s.debug.Open\ Log<Tab>%(log_name_label)s :%(open_log_cmd)s %(log_name)s<CR>" % locals()
         self.menus.append(open_item)
 
-        explore_item = "amenu %(sexplore_priority)s %(root)s.debug.Explore\ in\ Vim<Tab>%(log_dir)s :Explore %(log_dir)s<CR>" % locals()
+        explore_item = "amenu %(sexplore_priority)s %(root)s.debug.Explore\ in\ Vim<Tab>%(log_dir)s :Sexplore %(log_dir)s<CR>" % locals()
         self.menus.append(explore_item)
 
-        if reveal_log_cmd:
+        try:
             reveal_item = "amenu %(explore_priority)s %(root)s.debug.Explore\ in\ System<Tab>%(log_dir)s :%(reveal_log_cmd)s %(log_dir)s<CR>" % locals()
             self.menus.append(reveal_item)
+        except KeyError:
+            pass    # no reveal item for this platform
 
     def get_source_script(self, line):
         """Extract the source script from the line and return the bundle."""
@@ -589,7 +591,7 @@ class Headlights():
 
         # only reset the buffer submenu, if it exists
         # this is faster than resetting everything, as it seems that vim will only attach new menus
-        # annoying side effect: new menus (for eg, via autoload) will go to the bottom and mess up the sorting
+        # annoying side effect: new menus (for eg, via autoload) will go to the bottom and mess up the order
         vim.command("try | aunmenu %(root)s.⁣⁣buffer | catch /E329/ | endtry" % locals())
 
         # attach the vim menus (and recover gracefully)
