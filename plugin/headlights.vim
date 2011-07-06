@@ -1,7 +1,7 @@
-" Headlights - One 'Bundles' menu to rule them all.
+" Headlights - Know Thy Bundles.
 " Version: 1.2
 " Home: <www.vim.org/scripts/script.php?script_id=3455>
-" Source:	<github.com/mbadran/headlights>
+" Development:	<github.com/mbadran/headlights>
 " Maintainer:	Mohammed Badran <mebadran _AT_ gmail>
 
 " boilerplate {{{1
@@ -12,10 +12,14 @@ endif
 
 if v:version < 700 || !has('python')
   echoerr 'Headlights requires Vim 7+ compiled with Python 2.6+ support.'
+  " (it's too much trouble to check for the Python version)
   finish
 endif
 
 let g:loaded_headlights = 1
+
+let s:save_cpo = &cpo
+set cpo&vim
 
 " configuration {{{1
 
@@ -84,3 +88,7 @@ function! s:RequestVimMenus() " {{{1
 			\ abbreviations=vim.eval("s:abbreviations"),
 			\ functions=vim.eval("s:functions"))
 endfunction
+
+" boilerplate {{{1
+
+let &cpo = s:save_cpo
