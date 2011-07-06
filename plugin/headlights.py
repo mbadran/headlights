@@ -34,10 +34,10 @@ class Headlights():
     expand_home = lambda self, path: os.getenv("HOME") + path[1:] if path.startswith("~") else path
 
     menu_spillover_patterns = {
-        re.compile(r"\.?\d", re.IGNORECASE): "0 - 9",
-        re.compile(r"\.?[a-i]", re.IGNORECASE): "a - i",
-        re.compile(r"\.?[j-r]", re.IGNORECASE): "j - r",
-        re.compile(r"\.?[s-z]", re.IGNORECASE): "s - z"
+        re.compile(r"\.?_?\d", re.IGNORECASE): "0 - 9",
+        re.compile(r"\.?_?[a-i]", re.IGNORECASE): "a - i",
+        re.compile(r"\.?_?[j-r]", re.IGNORECASE): "j - r",
+        re.compile(r"\.?_?[s-z]", re.IGNORECASE): "s - z"
     }
 
     def __init__(self, menu_root, debug_mode, vim_time, enable_files, scriptnames, **categories):
@@ -97,14 +97,14 @@ class Headlights():
 
         root = self.menu_root
 
-        for path, properties in list(self.bundles.items()):
+        for path, properties in iter(self.bundles.items()):
             name = properties["name"]
 
             spillover = self.sanitise_menu(self.get_spillover(name, path))
 
             # strip leading dots for aesthetic purposes
-            if name.startswith("."):
-                name = name[1:]
+            #if name.startswith("."):
+                #name = name[1:]
 
             name = self.sanitise_menu(name)
 
@@ -144,8 +144,8 @@ class Headlights():
         self.menus.append(disabled_item)
 
         for command in commands:
-            name = self.sanitise_menu(list(command.keys())[0])
-            definition = self.sanitise_menu(command[list(command.keys())[0]])
+            name = self.sanitise_menu(command[0])
+            definition = self.sanitise_menu(command[1])
 
             command_item = "amenu %(item_priority)s %(prefix)s%(name)s<Tab>:%(definition)s :%(name)s<CR>" % locals()
             self.menus.append(command_item)
@@ -399,7 +399,7 @@ class Headlights():
                         command = "@ " + command
                         source_script["buffer"] = True
 
-                    source_script["commands"].append({command: definition})
+                    source_script["commands"].append([command, definition])
 
                 except IndexError:
                     self.errors.append("parse_command: source line not found for command '%(line)s'" % locals())
@@ -560,7 +560,7 @@ class Headlights():
         ERROR_MSG = "Headlights encountered a fatal error. %(DEBUG_MSG)s" % locals()
 
         if not self.debug_mode:
-            DEBUG_MSG = "To enable debug mode, see :help headlights-debug%(sep)c" % locals()
+            DEBUG_MSG = "To enable debug mode, see :help headlights_debug_mode%(sep)c" % locals()
 
         WARNING_MSG = "Warning: Headlights failed to execute menu command. %(DEBUG_MSG)s" % locals()
 
@@ -568,7 +568,7 @@ class Headlights():
             self.parse_scriptnames()
 
             # parse the menu categories with the similarly named functions
-            for key in list(self.categories.keys()):
+            for key in iter(self.categories.keys()):
                 if self.categories[key]:
                     function = getattr(self, "parse_" + key)
                     function(self.categories[key].strip().split("\n"))
@@ -617,7 +617,7 @@ class Headlights():
         platform = platform.platform()
         errors = "\n".join(self.errors)
         scriptnames = "\n".join(self.scriptnames)
-        categories = "\n\n".join("%s:%s" % (key.upper(), self.categories[key]) for key in list(self.categories.keys()))
+        categories = "\n\n".join("%s:%s" % (key.upper(), self.categories[key]) for key in iter(self.categories.keys()))
         menus = "\n".join(self.menus)
         vim_time = self.vim_time
         python_time = time.time() - self.time_start
@@ -628,7 +628,7 @@ DATE: %(date)s
 PLATFORM: %(platform)s
 
 This is the debug log for Headlights <https://github.com/mbadran/headlights/>
-For details on how to raise a GitHub issue, see :help headlights-issues
+For details on how to raise a GitHub issue, see :help headlights_issues
 Don't forget to disable debug mode when you're done!
 
 ERRORS:
