@@ -192,7 +192,7 @@ class Headlights():
         open_item = "amenu %(item_priority)s.10 %(prefix)s%(trunc_file_path)s.Open\ File<Tab>%(file_path)s :%(open_cmd)s %(file_path_cmd)s<CR>" % locals()
         self.menus.append(open_item)
 
-        explore_item = "amenu %(item_priority)s.20 %(prefix)s%(trunc_file_path)s.Explore\ in\ Vim<Tab>%(file_dir_path)s :Sexplore %(file_dir_path_cmd)s<CR>" % locals()
+        explore_item = "amenu %(item_priority)s.20 %(prefix)s%(trunc_file_path)s.Explore\ in\ Vim<Tab>%(file_dir_path)s :Texplore %(file_dir_path_cmd)s<CR>" % locals()
         self.menus.append(explore_item)
 
         try:
@@ -291,7 +291,7 @@ class Headlights():
 
         sep_priority = "9997.300"
         open_priority = "9997.310"
-        sexplore_priority = "9997.320"
+        texplore_priority = "9997.320"
         explore_priority = "9997.330"
 
         log_name_label = self.sanitise_menu(log_name)
@@ -317,7 +317,7 @@ class Headlights():
         open_item = "amenu %(open_priority)s %(root)s.debug.Open\ Log<Tab>%(log_name_label)s :%(open_log_cmd)s %(log_name)s<CR>" % locals()
         self.menus.append(open_item)
 
-        explore_item = "amenu %(sexplore_priority)s %(root)s.debug.Explore\ in\ Vim<Tab>%(log_dir)s :Sexplore %(log_dir)s<CR>" % locals()
+        explore_item = "amenu %(texplore_priority)s %(root)s.debug.Explore\ in\ Vim<Tab>%(log_dir)s :Texplore %(log_dir)s<CR>" % locals()
         self.menus.append(explore_item)
 
         try:
