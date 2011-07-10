@@ -59,7 +59,7 @@ endfunction
 function! s:InitBundleData() " {{{1
   let s:scriptnames = s:GetVimCommandOutput('scriptnames')
   let s:commands = s:show_commands? s:GetVimCommandOutput('command') : ''
-	let s:mappings = s:show_mappings? s:GetVimCommandOutput('map') : ''
+	let s:mappings = s:show_mappings? s:GetVimCommandOutput('map') . s:GetVimCommandOutput('map!') : ''
 	let s:abbreviations = s:show_abbreviations? s:GetVimCommandOutput('abbreviate') : ''
 	let s:functions = s:show_functions? s:GetVimCommandOutput('function') : ''
 endfunction
