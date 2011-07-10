@@ -1,28 +1,37 @@
-# If you use Vim, you need Headlights
+Do you Need Headlights?
+=======================
 
-- Do you find it difficult to keep track of what [Vim] [1] plugins (aka bundles) you've installed?
+- Do you find it hard to keep track of what [Vim] [1] bundles (aka plugins)
+  you've installed?
 
-- Have you ever installed a plugin, only to get stuck when actually trying to use it?
+- Have you ever installed a bundle, only to get stuck when actually trying to
+  use it?
 
-- Do you rely on Google for reference more than plugin docs?
+- Do you rely on Google for reference more than bundle docs?
 
-If your answer to any of those questions is "Yes", "All the time!", or "Vim, is that like a scooter?" -- you've come to the right place.
+If your answer to any of those questions is "Yes", "All the time!", or "Vim,
+is that like a scooter?" -- you've come to the right place.
 
-# What is Headlights?
+![Headlights in Action][2]
 
-Headlights is a Vim plugin that creates a [TextMate] [2] like _Bundles_ menu.
+Headlights adds a _Bundles_ menu to Vim, revealing your bundles (aka. plugins)
+and the features they provide.
 
-Headlights sheds light on what plugins are installed and how to use them. It creates a menu for each plugin, scraping together docs, commands, mappings, abbreviations, functions, and script files.
+Headlights creates a menu for each _currently loaded_ bundle, grouping
+together docs, commands, mappings, abbreviations, functions, and script files.
 
-Combined with a powerful bundle manager like [Vundle] [3], Headlights will improve your ~~Vim user experience~~ quality of life.
+Combined with a powerful bundle manager such as [Vundle] [3], Headlights will
+improve your ~~Vim user experience~~ Quality of Life.
 
-Here, have a [screenshot] [4].
+How to Install Headlights
+=========================
 
-# How to install Headlights
+**NOTE:** Headlights requires Vim 7+ compiled with Python 2.6+ support.
 
-NOTE: Headlights requires a graphical version of Vim with Python support.
+The Recommended Way
+-------------------
 
-## The Vundle Way
+Using [Vundle] [3]:
 
 1. Add the following line to the Vundle section in your `.vimrc`:
 
@@ -32,56 +41,29 @@ NOTE: Headlights requires a graphical version of Vim with Python support.
 
     `BundleInstall`
 
-## The Manual Way
+The Manual Way
+--------------
 
-1. Download the source archive from [GitHub] [5].
+1. [Download the latest package] [4].
 
-2. Expand the contents of the Headlights plugin directory into your `.vim/plugin/` directory.
+2. Expand the archive into your `.vim` directory.
 
-3. Launch Vim.
+3. Run the following Vim command:
 
-# What to do when Headlights fails
+    `helptags ~/.vim/doc/`
 
-Headlights is an ambitious plugin. It tries to handle any plugin, on any version of Vim, on any operating system. There are bound to be combinations that evade testing.
+That is All
+===========
 
-If you encounter any errors, please let me know. You'll be helping improve Headlights and making history in the process!
+- For further reading, refer to the Headlights reference manual via the
+  following Vim menu:
 
-Typically, you'll see an error when you launch Vim, which you can retrieve with the following Vim command:
-
-    `messages`
-
-At the very least, please email me the error message (mebadran AT gmail). But ideally, please take a couple of minutes to raise an issue.
-
-## How to raise an issue
-
-1. Add the following line to your `.gvimrc`:
-
-    `let g:headlights_debug = 1`
-
-2. Relaunch Vim.
-
-3. Find the Headlights debug log in the `Bundles > debug` menu (or wherever you've defined your Headlights root menu).
-
-4. Upload the debug log to the Web (for eg. [Pastebin] [6]).
-
-5. Raise a new [issue] [7] for the error, referencing the debug log.
-
-(When you're done, remove the debug line from your `.gvimrc`.)
-
-I also welcome any [pull requests] [8], so feel free to contribute.
+    `Bundles > a -i > headlights > Help`
 
 [1]: http://www.vim.org/
 
-[2]: http://macromates.com/
+[2]: https://github.com/mbadran/headlights/raw/master/headlights_ss.png
 
 [3]: https://github.com/gmarik/vundle
 
-[4]: https://github.com/mbadran/headlights/raw/master/headlights_ss.png
-
-[5]: https://github.com/mbadran/headlights/archives/master
-
-[6]: http://pastebin.com/
-
-[7]: https://github.com/mbadran/headlights/issues
-
-[8]: http://help.github.com/fork-a-repo/
+[4]: https://github.com/mbadran/headlights/archives/master
