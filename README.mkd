@@ -1,20 +1,4 @@
-Do you Need Headlights?
-=======================
-
-- Do you find it hard to keep track of what [Vim] [1] bundles (aka plugins)
-  you've installed?
-
-- Have you ever installed a bundle, only to get stuck when actually trying to
-  use it?
-
-- Do you rely on Google for reference more than bundle docs?
-
-If your answer to any of those questions is _"Yes"_, _"All the time!"_, or
-_"Vim, is that like a scooter?"_ -- you've come to the right place.
-
-    
 ![Headlights in Action][2]
-    
 
 Headlights adds a `Bundles` menu to Vim, revealing your bundles (aka. plugins)
 and the features they provide.
@@ -25,8 +9,8 @@ together docs, commands, mappings, abbreviations, functions, and script files.
 Combined with a powerful bundle manager, Headlights will improve your ~~Vim
 User Experience~~ Quality of Life.
 
-How to Install Headlights
-=========================
+Get Headlights
+==============
 
 __NOTE:__ Headlights requires Vim 7+ compiled with Python 2.6+ support.
 
@@ -54,8 +38,7 @@ The Manual Way
 
     `helptags ~/.vim/doc/`
 
-That is All
-===========
+------------------------------------------------------------------------------
 
 - For further reading, refer to the Headlights help menu:
 
