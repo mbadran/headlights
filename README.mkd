@@ -12,7 +12,9 @@ Do you Need Headlights?
 If your answer to any of those questions is _"Yes"_, _"All the time!"_, or
 _"Vim, is that like a scooter?"_ -- you've come to the right place.
 
+    
 ![Headlights in Action][2]
+    
 
 Headlights adds a `Bundles` menu to Vim, revealing your bundles (aka. plugins)
 and the features they provide.
