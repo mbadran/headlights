@@ -9,8 +9,8 @@ Do you Need Headlights?
 
 - Do you rely on Google for reference more than bundle docs?
 
-If your answer to any of those questions is "_Yes_", "_All the time!_", or "_Vim,
-is that like a scooter?_" -- you've come to the right place.
+If your answer to any of those questions is _"Yes"_, _"All the time!"_, or
+_"Vim, is that like a scooter?"_ -- you've come to the right place.
 
 ![Headlights in Action][2]
 
