@@ -38,9 +38,10 @@ The Manual Way
 
     `helptags ~/.vim/doc/`
 
-------------------------------------------------------------------------------
+Further Reading
+===============
 
-- For further reading, refer to the Headlights help menu:
+- Refer to the Headlights help menu:
 
     `Bundles > a -i > headlights > Help`
 
