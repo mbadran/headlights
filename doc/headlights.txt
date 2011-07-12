@@ -1,4 +1,4 @@
-*headlights.txt*                Know Thy Bundles                   *headlights*
+*headlights.txt*                Know Thy Bundles
 
 
  @@@@@@                                                               @@@@@@
@@ -9,7 +9,7 @@
 
 
 ==============================================================================
-CONTENTS                                                 *headlights-contents*
+CONTENTS                                                          *headlights*
 
     1. Introduction _______________________________________ |headlights-intro|
     2. Options __________________________________________ |headlights-options|
