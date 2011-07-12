@@ -1,0 +1,218 @@
+*headlights.txt*                Know Thy Bundle                   *headlights*
+
+
+ @@@@@@                                                               @@@@@@
+@@!-#@@@                                                             @@!#-@@@
+@!@#-!@!                     H·E·A·D·L·I·G·H·T·S                     @!@-#!@!
+!!:-#!!!                                                             !!:#-!!!
+ : :. :                                                               : :. :
+
+
+==============================================================================
+CONTENTS                                                 *headlights-contents*
+
+    1. Introduction _______________________________________ |headlights-intro|
+    2. Options __________________________________________ |headlights-options|
+    3. Issues ____________________________________________ |headlights-issues|
+    4. About ______________________________________________ |headlights-about|
+    5. Changelog ______________________________________ |headlights-changelog|
+    6. TODO ________________________________________________ |headlights-todo|
+    7. License __________________________________________ |headlights-license|
+
+==============================================================================
+INTRODUCTION                                                *headlights-intro*
+
+Headlights adds a 'bundles' menu [1] to Vim, revealing your bundles [2] and
+the features they provide.
+
+Headlights creates a menu for each currently loaded [3] bundle, grouping
+together docs, commands, mappings, abbreviations, functions, and script files.
+
+Combined with a powerful bundle manager, Headlights will improve your Vim user
+experience -- nay, your Quality of Life.
+
+------------------------------------------------------------------------------
+
+[1]: Headlights is inspired by TextMate's 'Bundles' menu.
+
+[2]: Aka. plugins.
+
+[3]: Headlights mirrors Vim's 'scriptnames' command, revealing only the
+     bundles that are currently loaded. This is fast because it avoids file
+     system access, but the trade off is that autoload bundles are not
+     revealed until they are, well, autoloaded. (This is acceptable.)
+
+==============================================================================
+OPTIONS                                                   *headlights-options*
+
+Note: For performance reasons, only 'commands' and 'mappings' are enabled by
+default. See |headlights-issues| for details.
+
+                                                  *headlights_use_plugin_menu*
+
+Reuse the conventional 'plugin' menu instead of creating a new one: >
+
+    let g:headlights_use_plugin_menu = 1
+<
+Default value: 0
+
+                                                       *headlights_show_files*
+
+Create menus for bundles' script files: >
+
+    let g:headlights_show_files = 1
+<
+Default value: 0
+
+                                                    *headlights_show_commands*
+
+Create menus for bundles' commands: >
+
+    let g:headlights_show_commands = 1
+<
+Default value: 1
+
+                                                    *headlights_show_mappings*
+
+Create menus for bundles' mappings: >
+
+    let g:headlights_show_mappings = 1
+<
+Default value: 1
+
+                                               *headlights_show_abbreviations*
+
+Create menus for bundles' abbreviations: >
+
+    let g:headlights_show_abbreviations = 1
+<
+Default value: 0
+
+                                                   *headlights_show_functions*
+
+Create menus for bundles' global functions: >
+
+    let g:headlights_show_functions = 1
+<
+Default value: 0
+
+                                                       *headlights_debug_mode*
+
+Enable debug mode and create menus to access the log file: >
+
+    let g:headlights_debug_mode = 1
+<
+Default value: 0 (1 in the event of a Headlights exception)
+
+Note: If you manually enable this option, remember to disable it after
+troubleshooting, or log files will be generated very time you enter a buffer,
+impacting performance and disk space.
+
+==============================================================================
+ISSUES                                                     *headlights-issues*
+
+When |headlights_debug_mode| is enabled -- either because you enabled it or
+because a critical error occurred -- a 'debug' menu will appear in the
+Headlights menu. This will give you access to the Headlights debug log, which
+has all the information needed to troubleshoot any problems.
+
+In the event of a problem, please raise a new project issue at:
+
+<https://github.com/mbadran/headlights/issues>
+
+Be sure to reference the debug log. You can upload it to paste services like
+<http://pastebin.com>.
+
+Lastly, I welcome any pull requests, so feel free to Fork, Fix, Send.
+
+GENERAL ISSUES
+
+- Performance, or lack thereof.
+
+Headlights can slow Vim down when a large number of bundles are loaded, or
+when hardware resources are limited. Because of this, most Headlights options
+are disabled by default.
+
+If you experience slowness when launching Vim or switching buffers, disable
+some or all Headlights options, and consider troubleshooting further or
+raising a project issue.
+
+- Syntax items? What syntax items?
+
+Syntax items are not currently revealed by Headlights. This is because Vim
+does not reveal the source of syntax items (ie :verbose syntax), so there is
+no way to refer syntax items back to a bundle. This is unfixable, unless Vim
+introduces this functionality in a later version.
+
+For all other issues, refer to <https://github.com/mbadran/headlights/issues>
+
+==============================================================================
+ABOUT                                                       *headlights-about*
+
+Project development exists at <https://github.com/mbadran/headlights>.
+
+Official releases are tagged with version numbers, and simultaneously hosted
+at Vim.org:
+
+<http://www.vim.org/scripts/script.php?script_id=3455>
+
+Send feedback and suggestions to mebadran _AT_ gmail.
+
+==============================================================================
+7. Changelog                                            *headlights-changelog*
+
+1.2
+    - major rewrite
+    - added a new buffer-local menu
+    - catered for autoload bundles
+    - performance optimisations
+    - several bug fixes and improvements
+    - dropped autocmds altogether
+    - reintroduced functions as an optional bundle category
+    - cleaned up configuration options
+    - added missing mapping types
+    - removed the 'occurrences' help option
+    - updated docs
+
+1.1
+    - streamlined the menu layout
+    - fixed the debug mode feature
+    - added a debug menu for debug mode
+    - added an 'occurrences' help option (:helpgrep)
+    - moved vim plugins/bundles to their own menu (runtime)
+    - fixed several minor issues
+    - refactored and cleaned up code
+
+1.0
+    - initial release
+
+==============================================================================
+TODO                                                         *headlights-todo*
+
+- the bundles menu currently gets out of order when autoload bundles are
+  handled. this is because the menu is not entirely reset -- only new items
+  are added below. to fix this, either provide a command to redo all the
+  menus, have a periodic on timeout fix, or change the menu layout to submenus
+  only (which is uglier and less convenient).
+
+- more performance optimisation on the default settings
+
+- more testing, especially for linux and windows
+
+MAYBE
+
+- group bundles by parent. vim does not currently do this, nor does
+  headlights. see syntastic for an example.
+
+  headlights can identify associated bundles if they share a common path, but
+  this requires some checks, and a 'parent' field will probably have to be
+  added to bundles. this may impact performance, and it should be optional.
+
+- add a new bundle category: highlight (:verbose highlight)
+
+- bring back autocmds as an optional bundle category (:verbose autocmd)
+
+==============================================================================
+9. License                                                *headlights-license*
+
+Headlights is released in the public domain.
