@@ -33,7 +33,7 @@ class Headlights():
     # required for forwards vim compatibility
     expand_home = lambda self, path: os.getenv("HOME") + path[1:] if path.startswith("~") else path
 
-    menu_spillover_patterns = {
+    MENU_SPILLOVER_PATTERNS = {
         re.compile(r"\.?_?\d", re.IGNORECASE): "0 - 9",
         re.compile(r"\.?_?[a-i]", re.IGNORECASE): "a - i",
         re.compile(r"\.?_?[j-r]", re.IGNORECASE): "j - r",
@@ -85,7 +85,7 @@ class Headlights():
         elif path.lower().find("runtime") > -1:
             spillover = "⁣runtime"
         else:
-            for pattern, category in list(self.menu_spillover_patterns.items()):
+            for pattern, category in list(self.MENU_SPILLOVER_PATTERNS.items()):
                 if pattern.match(name):
                     spillover = category
                     break
@@ -101,10 +101,6 @@ class Headlights():
             name = properties["name"]
 
             spillover = self.sanitise_menu(self.get_spillover(name, path))
-
-            # strip leading dots for aesthetic purposes
-            #if name.startswith("."):
-                #name = name[1:]
 
             name = self.sanitise_menu(name)
 
@@ -175,9 +171,10 @@ class Headlights():
         if len(file_path) > self.MENU_TRUNC_LIMIT:
             trunc_file_path = "<" + self.sanitise_menu(path[-self.MENU_TRUNC_LIMIT:])
 
-        # make the file appear in the "file > open recent" menu (macvim)
-        # also, honour the "open files from applications" option (macvim)
         if sys.platform == "darwin":
+            # make the file appear in the "file > open recent" menu
+            # also, honour the "open files from applications" option
+            # (this doesn't take into account terminal vim, but menu access there is probably unlikely)
             open_cmd = "!open -a MacVim"
             reveal_cmd = "!open"
         #elif sys.platform == "win32":
@@ -557,7 +554,7 @@ class Headlights():
         sep = os.linesep
 
         DEBUG_MSG = "See the '%(root)s > debug' menu for details.%(sep)c" % locals()
-        ERROR_MSG = "Headlights encountered a fatal error. %(DEBUG_MSG)s" % locals()
+        ERROR_MSG = "Headlights encountered a critical error. %(DEBUG_MSG)s" % locals()
 
         if not self.debug_mode:
             DEBUG_MSG = "To enable debug mode, see :help headlights_debug_mode%(sep)c" % locals()
@@ -608,9 +605,6 @@ class Headlights():
 
         log_file = tempfile.NamedTemporaryFile(prefix=LOGNAME_PREFIX, suffix=LOGNAME_SUFFIX, delete=False)
 
-        # in case the menu doesn't get added
-        #sys.stdout.write("Headlights debug log: %s%c" % (log_file.name, os.linesep))
-
         self.gen_debug_menu(log_file.name)
 
         date = time.ctime()
@@ -628,7 +622,7 @@ DATE: %(date)s
 PLATFORM: %(platform)s
 
 This is the debug log for Headlights <https://github.com/mbadran/headlights/>
-For details on how to raise a GitHub issue, see :help headlights_issues
+For details on how to raise a GitHub issue, see :help headlights-issues
 Don't forget to disable debug mode when you're done!
 
 ERRORS:
