@@ -1,4 +1,4 @@
-*headlights.txt*                Know Thy Bundle                   *headlights*
+*headlights.txt*                Know Thy Bundles                   *headlights*
 
 
  @@@@@@                                                               @@@@@@
