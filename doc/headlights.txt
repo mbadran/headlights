@@ -127,7 +127,7 @@ Lastly, I welcome any pull requests, so feel free to Fork, Fix, Send.
 
 GENERAL ISSUES
 
-- Performance, or lack thereof.
+- Performance
 
 Headlights can slow Vim down when a large number of bundles are loaded, or
 when hardware resources are limited. Because of this, most Headlights options
@@ -137,12 +137,11 @@ If you experience slowness when launching Vim or switching buffers, disable
 some or all Headlights options, and consider troubleshooting further or
 raising a project issue.
 
-- Syntax items? What syntax items?
+- Syntax items
 
-Syntax items are not currently revealed by Headlights. This is because Vim
-does not reveal the source of syntax items (ie :verbose syntax), so there is
-no way to refer syntax items back to a bundle. This is unfixable, unless Vim
-introduces this functionality in a later version.
+Syntax items cannot be displayed by Headlights. This is because Vim does not
+reveal the source of syntax items (via :verbose syntax), so there is no way to
+refer syntax items back to a bundle.
 
 For all other issues, refer to <https://github.com/mbadran/headlights/issues>
 
