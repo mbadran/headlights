@@ -7,7 +7,7 @@ Headlights creates a menu for each _currently loaded_ bundle, grouping
 together docs, commands, mappings, abbreviations, functions, and script files.
 
 Combined with a powerful bundle manager, Headlights will improve your ~~Vim
-User Experience~~ Quality of Life.
+user experience~~ quality of life.
 
 Get Headlights
 ==============
@@ -43,7 +43,7 @@ Further Reading
 
 - Refer to the Headlights help menu:
 
-    `Bundles > a -i > headlights > Help`
+    `Bundles > a - i > headlights > Help`
 
 [1]: http://www.vim.org/
 
