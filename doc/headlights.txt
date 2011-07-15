@@ -22,22 +22,20 @@ CONTENTS                                                          *headlights*
 ==============================================================================
 INTRODUCTION                                                *headlights-intro*
 
-Headlights adds a 'bundles' menu [1] to Vim, revealing your bundles [2] and
-the features they provide.
+Headlights adds a 'bundles' menu [1] to Vim, revealing your bundles (aka.
+plugins) and the features they provide.
 
-Headlights creates a menu for each currently loaded [3] bundle, grouping
+Headlights creates a menu for each currently loaded [2] bundle, grouping
 together docs, commands, mappings, abbreviations, functions, and script files.
 
 Combined with a powerful bundle manager, Headlights will improve your Vim user
-experience -- nay, your Quality of Life.
+experience -- nay, your quality of life.
 
 ------------------------------------------------------------------------------
 
-[1]: Headlights is inspired by TextMate's 'Bundles' menu.
+[1]: Headlights is inspired by TextMate's Bundles menu.
 
-[2]: Aka. plugins.
-
-[3]: Headlights mirrors Vim's 'scriptnames' command, revealing only the
+[2]: Headlights mirrors Vim's 'scriptnames' command, revealing only the
      bundles that are currently loaded. This is fast because it avoids file
      system access, but the trade off is that autoload bundles are not
      revealed until they are, well, autoloaded. (This is acceptable.)
@@ -58,7 +56,7 @@ Default value: 0
 
                                                        *headlights_show_files*
 
-Create menus for bundles' script files: >
+Create menus for bundle script files: >
 
     let g:headlights_show_files = 1
 <
@@ -66,7 +64,7 @@ Default value: 0
 
                                                     *headlights_show_commands*
 
-Create menus for bundles' commands: >
+Create menus for bundle commands: >
 
     let g:headlights_show_commands = 1
 <
@@ -74,7 +72,7 @@ Default value: 1
 
                                                     *headlights_show_mappings*
 
-Create menus for bundles' mappings: >
+Create menus for bundle mappings: >
 
     let g:headlights_show_mappings = 1
 <
@@ -82,7 +80,7 @@ Default value: 1
 
                                                *headlights_show_abbreviations*
 
-Create menus for bundles' abbreviations: >
+Create menus for bundle abbreviations: >
 
     let g:headlights_show_abbreviations = 1
 <
@@ -90,7 +88,7 @@ Default value: 0
 
                                                    *headlights_show_functions*
 
-Create menus for bundles' global functions: >
+Create menus for global bundle functions: >
 
     let g:headlights_show_functions = 1
 <
@@ -112,7 +110,7 @@ impacting performance and disk space.
 ISSUES                                                     *headlights-issues*
 
 When |headlights_debug_mode| is enabled -- either because you enabled it or
-because a critical error occurred -- a 'debug' menu will appear in the
+because a critical error occurred -- a 'debug' menu will appear under the
 Headlights menu. This will give you access to the Headlights debug log, which
 has all the information needed to troubleshoot any problems.
 
@@ -120,42 +118,32 @@ In the event of a problem, please raise a new project issue at:
 
 <https://github.com/mbadran/headlights/issues>
 
-Be sure to reference the debug log. You can upload it to paste services like
+Be sure to reference the debug log. You can upload it to a paste service like
 <http://pastebin.com>.
 
 Lastly, I welcome any pull requests, so feel free to Fork, Fix, Send.
 
-GENERAL ISSUES
-
-- Performance
+A NOTE ON PERFORMANCE
 
 Headlights can slow Vim down when a large number of bundles are loaded, or
-when hardware resources are limited. Because of this, most Headlights options
-are disabled by default.
+when hardware resources are limited. Because of this, most configuration
+options are disabled by default.
 
 If you experience slowness when launching Vim or switching buffers, disable
-some or all Headlights options, and consider troubleshooting further or
+some or all configuration options, and consider troubleshooting further or
 raising a project issue.
-
-- Syntax items
-
-Syntax items cannot be displayed by Headlights. This is because Vim does not
-reveal the source of syntax items (via :verbose syntax), so there is no way to
-refer syntax items back to a bundle.
-
-For all other issues, refer to <https://github.com/mbadran/headlights/issues>
 
 ==============================================================================
 ABOUT                                                       *headlights-about*
 
-Project development exists at <https://github.com/mbadran/headlights>.
+Project development is hosted at <https://github.com/mbadran/headlights>.
 
-Official releases are tagged with version numbers, and simultaneously hosted
-at Vim.org:
+Official releases are tagged with their version numbers, and simultaneously
+hosted at Vim.org:
 
 <http://www.vim.org/scripts/script.php?script_id=3455>
 
-Send feedback and suggestions to mebadran _AT_ gmail.
+Send feedback and untold riches to mebadran _AT_ gmail.
 
 ==============================================================================
 7. Changelog                                            *headlights-changelog*
@@ -171,7 +159,7 @@ Send feedback and suggestions to mebadran _AT_ gmail.
     - cleaned up configuration options
     - added missing mapping types
     - removed the 'occurrences' help option
-    - updated docs
+    - updated reference docs
 
 1.1
     - streamlined the menu layout
@@ -194,18 +182,18 @@ TODO                                                         *headlights-todo*
   menus, have a periodic on timeout fix, or change the menu layout to submenus
   only (which is uglier and less convenient).
 
+- group bundles by parent. vim does not currently do this, nor does
+  headlights. install syntastic for an example.
+
+  headlights can identify associated bundles if they share a common path, but
+  this requires some checks, and a 'parent' field will probably have to be
+  added to bundles. this may impact performance, and it should be optional.
+
 - more performance optimisation on the default settings
 
 - more testing, especially for linux and windows
 
 MAYBE
-
-- group bundles by parent. vim does not currently do this, nor does
-  headlights. see syntastic for an example.
-
-  headlights can identify associated bundles if they share a common path, but
-  this requires some checks, and a 'parent' field will probably have to be
-  added to bundles. this may impact performance, and it should be optional.
 
 - add a new bundle category: highlight (:verbose highlight)
 
