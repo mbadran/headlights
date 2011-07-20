@@ -2,6 +2,7 @@
 
 #import os, re, time, sys       # imported in headlights.vim
 
+
 class Headlights():
     """
     Python helper class for headlights.vim
@@ -390,7 +391,7 @@ class Headlights():
 
                 # get the source script from the next list item
                 try:
-                    source_script = self.get_source_script(commands[i+1])
+                    source_script = self.get_source_script(commands[i + 1])
 
                     if matches.group("buffer"):
                         command = "@ " + command
@@ -458,7 +459,7 @@ class Headlights():
 
                 # get the source script from the next list item
                 try:
-                    source_script = self.get_source_script(mappings[i+1])
+                    source_script = self.get_source_script(mappings[i + 1])
 
                     # flag the bundle as buffer local, and prepend an indicator to the mapping
                     if matches.group("buffer"):
@@ -514,7 +515,7 @@ class Headlights():
 
                 # get the source script from the next list item
                 try:
-                    source_script = self.get_source_script(abbreviations[i+1])
+                    source_script = self.get_source_script(abbreviations[i + 1])
 
                     # flag the bundle as buffer local, and prepend an indicator to the mapping
                     if matches.group("buffer"):
@@ -541,7 +542,7 @@ class Headlights():
                 function = line.split("function ")[1]
 
                 # get the source script from the next list item
-                source_script = self.get_source_script(functions[i+1])
+                source_script = self.get_source_script(functions[i + 1])
 
                 # add the function to the source script (public functions only)
                 if not function.startswith("<SNR>"):
@@ -598,7 +599,8 @@ class Headlights():
     def do_debug(self):
         """Attach the debug menu and write the log file."""
 
-        import tempfile, platform
+        import tempfile
+        import platform
 
         LOGNAME_PREFIX = "headlights_"
         LOGNAME_SUFFIX = ".log"
