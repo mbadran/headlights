@@ -553,11 +553,11 @@ class Headlights():
         root = self.menu_root
         sep = os.linesep
 
-        DEBUG_MSG = "See the '%(root)s > debug' menu for details.%(sep)c" % locals()
+        DEBUG_MSG = "See the '%(root)s > debug' menu for details.%(sep)s" % locals()
         ERROR_MSG = "Headlights encountered a critical error. %(DEBUG_MSG)s" % locals()
 
         if not self.debug_mode:
-            DEBUG_MSG = "To enable debug mode, see :help headlights_debug_mode%(sep)c" % locals()
+            DEBUG_MSG = "To enable debug mode, see :help headlights_debug_mode%(sep)s" % locals()
 
         WARNING_MSG = "Warning: Headlights failed to execute menu command. %(DEBUG_MSG)s" % locals()
 
