@@ -1,8 +1,5 @@
 # encoding: utf-8
 
-#import os, re, time, sys       # imported in headlights.vim
-
-
 class Headlights():
     """
     Python helper class for headlights.vim
@@ -117,39 +114,19 @@ class Headlights():
     def gen_commands_menu(self, commands, prefix):
         """Add command menus."""
 
-        sep_priority = "9997.110"
-        title_priority = "9997.120"
-        item_priority = "9997.130"
-
-        sep_item = "amenu %(sep_priority)s %(prefix)s-Sep1- :" % locals()
-        self.menus.append(sep_item)
-
-        title_item = "amenu %(title_priority)s %(prefix)sCommands :" % locals()
-        self.menus.append(title_item)
-        disabled_item = "amenu disable %(prefix)sCommands" % locals()
-        self.menus.append(disabled_item)
+        item_priority = "9997.120"
 
         for command in commands:
             name = self.sanitise_menu(command[0])
             definition = self.sanitise_menu(command[1])
 
-            command_item = "amenu %(item_priority)s %(prefix)s%(name)s<Tab>:%(definition)s :%(name)s<CR>" % locals()
+            command_item = "amenu %(item_priority)s %(prefix)sCommands.%(name)s<Tab>:%(definition)s :%(name)s<CR>" % locals()
             self.menus.append(command_item)
 
     def gen_files_menu(self, path, prefix, load_order):
         """Add file menus."""
 
-        sep_priority = "9997.220"
-        title_priority = "9997.230"
-        item_priority = "9997.240"
-
-        sep_item = "amenu %(sep_priority)s %(prefix)s-Sep3- :" % locals()
-        self.menus.append(sep_item)
-
-        title_item = "amenu %(title_priority)s %(prefix)sFiles :" % locals()
-        self.menus.append(title_item)
-        disabled_item = "amenu disable %(prefix)sFiles" % locals()
-        self.menus.append(disabled_item)
+        item_priority = "9997.160"
 
         file_path = trunc_file_path = self.sanitise_menu(path)
         file_dir_path = self.sanitise_menu(os.path.dirname(path))
@@ -176,66 +153,46 @@ class Headlights():
         else:
             open_cmd = "edit"
 
-        open_item = "amenu %(item_priority)s.10 %(prefix)s%(trunc_file_path)s.Open\ File<Tab>%(file_path)s :%(open_cmd)s %(file_path_cmd)s<CR>" % locals()
+        open_item = "amenu %(item_priority)s.10 %(prefix)sFiles.%(trunc_file_path)s.Open\ File<Tab>%(file_path)s :%(open_cmd)s %(file_path_cmd)s<CR>" % locals()
         self.menus.append(open_item)
 
-        explore_item = "amenu %(item_priority)s.20 %(prefix)s%(trunc_file_path)s.Explore\ in\ Vim<Tab>%(file_dir_path)s :Texplore %(file_dir_path_cmd)s<CR>" % locals()
+        explore_item = "amenu %(item_priority)s.20 %(prefix)sFiles.%(trunc_file_path)s.Explore\ in\ Vim<Tab>%(file_dir_path)s :Texplore %(file_dir_path_cmd)s<CR>" % locals()
         self.menus.append(explore_item)
 
         try:
-            reveal_item = "amenu %(item_priority)s.30 %(prefix)s%(trunc_file_path)s.Explore\ in\ System<Tab>%(file_dir_path)s :%(reveal_cmd)s %(file_dir_path_cmd)s<CR>" % locals()
+            reveal_item = "amenu %(item_priority)s.30 %(prefix)sFiles.%(trunc_file_path)s.Explore\ in\ System<Tab>%(file_dir_path)s :%(reveal_cmd)s %(file_dir_path_cmd)s<CR>" % locals()
             self.menus.append(reveal_item)
         except KeyError:
             pass    # no reveal item for this platform
 
         if self.SHOW_LOAD_ORDER:
-            sep_item = "amenu %(item_priority)s.40 %(prefix)s%(trunc_file_path)s.-Sep1- :" % locals()
+            sep_item = "amenu %(item_priority)s.40 %(prefix)sFiles.%(trunc_file_path)s.-Sep1- :" % locals()
             self.menus.append(sep_item)
 
-            order_item = "amenu %(item_priority)s.50 %(prefix)s%(trunc_file_path)s.Order:\ %(load_order)s :" % locals()
+            order_item = "amenu %(item_priority)s.50 %(prefix)sFiles.%(trunc_file_path)s.Order:\ %(load_order)s :" % locals()
             self.menus.append(order_item)
-            disabled_item = "amenu disable %(prefix)s%(trunc_file_path)s.Order:\ %(load_order)s" % locals()
+            disabled_item = "amenu disable %(prefix)sFiles.%(trunc_file_path)s.Order:\ %(load_order)s" % locals()
             self.menus.append(disabled_item)
 
     def gen_mappings_menu(self, mappings, prefix):
         """Add mapping menus."""
 
-        sep_priority = "9997.140"
-        title_priority = "9997.150"
-        item_priority = "9997.160"
-
-        sep_item = "amenu %(sep_priority)s %(prefix)s-Sep2- :" % locals()
-        self.menus.append(sep_item)
-
-        title_item = "amenu %(title_priority)s %(prefix)sMappings :" % locals()
-        self.menus.append(title_item)
-        disabled_item = "amenu disable %(prefix)sMappings" % locals()
-        self.menus.append(disabled_item)
+        item_priority = "9997.130"
 
         for mode, lhs, rhs in mappings:
             mode = self.sanitise_menu(mode)
             lhs = self.sanitise_menu(lhs)
             rhs = self.sanitise_menu(rhs)
 
-            mapping_item = "amenu %(item_priority)s %(prefix)s%(mode)s.%(lhs)s<Tab>%(rhs)s :" % locals()
+            mapping_item = "amenu %(item_priority)s %(prefix)sMappings.%(mode)s.%(lhs)s<Tab>%(rhs)s :" % locals()
             self.menus.append(mapping_item)
-            disabled_item = "amenu disable %(prefix)s%(mode)s.%(lhs)s" % locals()
+            disabled_item = "amenu disable %(prefix)sMappings.%(mode)s.%(lhs)s" % locals()
             self.menus.append(disabled_item)
 
     def gen_abbreviations_menu(self, abbreviations, prefix):
         """Add abbreviation menus."""
 
-        sep_priority = "9997.170"
-        title_priority = "9997.180"
-        item_priority = "9997.190"
-
-        sep_item = "amenu %(sep_priority)s %(prefix)s-Sep4- :" % locals()
-        self.menus.append(sep_item)
-
-        title_item = "amenu %(title_priority)s %(prefix)sAbbreviations :" % locals()
-        self.menus.append(title_item)
-        disabled_item = "amenu disable %(prefix)sAbbreviations" % locals()
-        self.menus.append(disabled_item)
+        item_priority = "9997.140"
 
         for mode, lhs, rhs in abbreviations:
             mode = self.sanitise_menu(mode)
@@ -246,27 +203,27 @@ class Headlights():
                 trunc_lhs = lhs[:self.MENU_TRUNC_LIMIT] + ">"
 
             # prefix mode with an invisible char so vim can create mode menus separate from mappings'
-            abbr_item = "amenu %(item_priority)s %(prefix)s⁣%(mode)s.%(trunc_lhs)s<Tab>%(rhs)s :<CR>" % locals()
+            abbr_item = "amenu %(item_priority)s %(prefix)s⁣Abbreviations.%(mode)s.%(trunc_lhs)s<Tab>%(rhs)s :<CR>" % locals()
             self.menus.append(abbr_item)
-            disabled_item = "amenu disable %(prefix)s⁣%(mode)s.%(trunc_lhs)s" % locals()
+            disabled_item = "amenu disable %(prefix)s⁣Abbreviations.%(mode)s.%(trunc_lhs)s" % locals()
             self.menus.append(disabled_item)
 
     def gen_help_menu(self, name, prefix):
         """Add help menus."""
 
         help_priority = "9997.100"
+        sep_priority = "9997.110"
 
         help_item = "amenu %(help_priority)s %(prefix)sHelp<Tab>help\ %(name)s :help %(name)s<CR>" % locals()
         self.menus.append(help_item)
 
+        sep_item = "amenu %(sep_priority)s %(prefix)s-Sep1- :" % locals()
+        self.menus.append(sep_item)
+
     def gen_functions_menu(self, functions, prefix):
         """Add function menus."""
 
-        sep_priority = "9997.200"
-        item_priority = "9997.210"
-
-        sep_item = "amenu %(sep_priority)s %(prefix)s-Sep6- :" % locals()
-        self.menus.append(sep_item)
+        item_priority = "9997.150"
 
         for function in functions:
             trunc_function = self.sanitise_menu(function)
