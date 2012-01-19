@@ -6,49 +6,36 @@
 class Headlights():
     """
     Python helper class for headlights.vim
-    Version: 1.2
+    Version: 1.3
     """
-    bundles = {}
-    menus = []
-    errors = []
 
-    MODE_MAP = {
-        " ": "Normal, Visual, Select, Operator-pending",
-        "n": "Normal",
-        "v": "Visual and Select",
-        "s": "Select",
-        "x": "Visual",
-        "o": "Operator-pending",
-        "!": "Insert and Command-line",
-        "i": "Insert",
-        "l": ":lmap",
-        "c": "Command-line"
-    }
-
-    SOURCE_LINE = "Last set from"
-
-    MENU_TRUNC_LIMIT = 30
+    MENU_ROOT = sys.argv[0]
+    SHOW_FILES = sys.argv[1]
+    SHOW_LOAD_ORDER = sys.argv[2]
+    DEBUG_MODE = sys.argv[3]
+    MODE_MAP = sys.argv[4]
+    SOURCE_LINE = sys.argv[5]
+    MENU_TRUNC_LIMIT = sys.argv[6]
+    MENU_SPILLOVER_PATTERNS = sys.argv[7]
+    COMMAND_PATTERN = sys.argv[8]
+    MAPPING_PATTERN = sys.argv[9]
+    ABBREV_PATTERN = sys.argv[10]
+    SCRIPTNAME_PATTERN = sys.argv[11]
 
     sanitise_menu = lambda self, menu: menu.replace("\\", "\\\\").replace("|", "\\|").replace(".", "\\.").replace(" ", "\\ ").replace("<", "\\<")
 
     # required for forwards vim compatibility
     expand_home = lambda self, path: os.getenv("HOME") + path[1:] if path.startswith("~") else path
 
-    MENU_SPILLOVER_PATTERNS = {
-        re.compile(r"\.?_?\d", re.IGNORECASE): "0 - 9",
-        re.compile(r"\.?_?[a-i]", re.IGNORECASE): "a - i",
-        re.compile(r"\.?_?[j-r]", re.IGNORECASE): "j - r",
-        re.compile(r"\.?_?[s-z]", re.IGNORECASE): "s - z"
-    }
+    bundles = {}
+    menus = []
+    errors = []
 
-    def __init__(self, menu_root, debug_mode, vim_time, enable_files, scriptnames, **categories):
+    def __init__(self, vim_time, scriptnames, **categories):
         """Initialise the default settings."""
 
         self.time_start = time.time()
-        self.menu_root = menu_root
-        self.debug_mode = bool(int(debug_mode))
         self.vim_time = float(vim_time)
-        self.enable_files = bool(int(enable_files))
         self.scriptnames = scriptnames
         self.categories = categories
 
@@ -57,15 +44,15 @@ class Headlights():
 
         # for quick profiling, enable
         #import cProfile
-        #self.debug_mode = False
+        #self.DEBUG_MODE = False
         #cProfile.runctx("self.attach_menus()", globals(), locals())
 
-    def init_bundle(self, path):
+    def init_bundle(self, path, order):
         """Initialise new bundles (aka scripts/plugins)."""
 
         name = os.path.splitext(os.path.basename(path))[0]
 
-        self.bundles[path] = {"name": name, "commands": [], "mappings": [], "abbreviations": [], "functions": [], "buffer": False}
+        self.bundles[path] = {"order": order, "name": name, "commands": [], "mappings": [], "abbreviations": [], "functions": [], "buffer": False}
 
         return self.bundles[path]
 
@@ -96,9 +83,11 @@ class Headlights():
     def gen_menus(self):
         """Add the root menu and coordinate menu categories."""
 
-        root = self.menu_root
+        root = self.MENU_ROOT
 
         for path, properties in iter(self.bundles.items()):
+            load_order = properties["order"]
+
             name = properties["name"]
 
             spillover = self.sanitise_menu(self.get_spillover(name, path))
@@ -110,8 +99,8 @@ class Headlights():
             # this needs to be first so sort() can get the script order right
             self.gen_help_menu(name, prefix)
 
-            if self.enable_files:
-                self.gen_files_menu(path, prefix)
+            if self.SHOW_FILES:
+                self.gen_files_menu(path, prefix, load_order)
 
             if len(properties["commands"]) > 0:
                 self.gen_commands_menu(properties["commands"], prefix)
@@ -147,7 +136,7 @@ class Headlights():
             command_item = "amenu %(item_priority)s %(prefix)s%(name)s<Tab>:%(definition)s :%(name)s<CR>" % locals()
             self.menus.append(command_item)
 
-    def gen_files_menu(self, path, prefix):
+    def gen_files_menu(self, path, prefix, load_order):
         """Add file menus."""
 
         sep_priority = "9997.220"
@@ -198,6 +187,15 @@ class Headlights():
             self.menus.append(reveal_item)
         except KeyError:
             pass    # no reveal item for this platform
+
+        if self.SHOW_LOAD_ORDER:
+            sep_item = "amenu %(item_priority)s.40 %(prefix)s%(trunc_file_path)s.-Sep1- :" % locals()
+            self.menus.append(sep_item)
+
+            order_item = "amenu %(item_priority)s.50 %(prefix)s%(trunc_file_path)s.Order:\ %(load_order)s :" % locals()
+            self.menus.append(order_item)
+            disabled_item = "amenu disable %(prefix)s%(trunc_file_path)s.Order:\ %(load_order)s" % locals()
+            self.menus.append(disabled_item)
 
     def gen_mappings_menu(self, mappings, prefix):
         """Add mapping menus."""
@@ -295,7 +293,7 @@ class Headlights():
         log_name_label = self.sanitise_menu(log_name)
         log_dir = os.path.dirname(log_name)
 
-        root = self.menu_root
+        root = self.MENU_ROOT
 
         sep_item = "amenu %(sep_priority)s %(root)s.-SepHLD- :" % locals()
         self.menus.append(sep_item)
@@ -336,36 +334,17 @@ class Headlights():
 
         self.scriptnames = self.scriptnames.strip().split("\n")
 
-        pattern = re.compile(r"\s*\d+:\s")
-
-        for path in self.scriptnames:
+        for line in self.scriptnames:
             # strip leading indexes
-            path = pattern.sub("", path)
+            matches = self.SCRIPTNAME_PATTERN.match(line)
 
-            self.init_bundle(self.expand_home(path))
+            order = matches.group("order")
+            path = matches.group("path")
+
+            self.init_bundle(self.expand_home(path), order)
 
     def parse_commands(self, commands):
         """Extract the commands."""
-
-        pattern = re.compile(r'''
-            ^
-            (?P<bang>!)?
-            \s*
-            (?P<register>")?
-            \s*
-            (?P<buffer>b\s+)?
-            (?P<name>[\S]+)
-            \s+
-            (?P<args>[01+?*])?
-            \s*
-            (?P<range>(\.|1c|%|0c))?
-            \s*
-            (?P<complete>(dir|file|buffer))?
-            \s*
-            :?
-            (?P<definition>.+)?
-            $
-            ''', re.VERBOSE | re.IGNORECASE)
 
         # delete the listing header
         commands = commands[1:]
@@ -373,7 +352,7 @@ class Headlights():
         for i, line in enumerate(commands):
             # begin with command lines
             if not line.find(self.SOURCE_LINE) > -1:
-                matches = pattern.match(line)
+                matches = self.COMMAND_PATTERN.match(line)
 
                 try:
                     command = matches.group("name")
@@ -424,24 +403,10 @@ class Headlights():
     def parse_mappings(self, mappings):
         """Extract the mappings."""
 
-        pattern = re.compile(r'''
-            ^
-            (?P<modes>[nvsxo!ilc]+)?
-            \s*
-            (?P<lhs>[\S]+)
-            \s+
-            (?P<noremap>\*)?
-            (?P<script>&)?
-            (?P<buffer>@)?
-            \s*
-            (?P<rhs>.+)
-            $
-            ''', re.VERBOSE | re.IGNORECASE)
-
         for i, line in enumerate(mappings):
             # begin with mapping lines
             if not line.find(self.SOURCE_LINE) > -1:
-                matches = pattern.match(line)
+                matches = self.MAPPING_PATTERN.match(line)
 
                 try:
                     lhs = matches.group("lhs")
@@ -480,24 +445,10 @@ class Headlights():
     def parse_abbreviations(self, abbreviations):
         """Extract the abbreviations."""
 
-        pattern = re.compile(r'''
-            ^
-            (?P<modes>[nvsxo!ilc]+)?
-            \s*
-            (?P<lhs>[\S]+)
-            \s+
-            (?P<noremap>\*)?
-            (?P<script>&)?
-            (?P<buffer>@)?
-            \s*
-            (?P<rhs>.+)
-            $
-            ''', re.VERBOSE | re.IGNORECASE)
-
         for i, line in enumerate(abbreviations):
             # begin with abbreviation lines
             if not line.find(self.SOURCE_LINE) > -1:
-                matches = pattern.match(line)
+                matches = self.ABBREV_PATTERN.match(line)
 
                 try:
                     lhs = matches.group("lhs")
@@ -551,13 +502,13 @@ class Headlights():
     def attach_menus(self):
         """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
 
-        root = self.menu_root
+        root = self.MENU_ROOT
         sep = os.linesep
 
         DEBUG_MSG = "See the '%(root)s > debug' menu for details.%(sep)s" % locals()
         ERROR_MSG = "Headlights encountered a critical error. %(DEBUG_MSG)s" % locals()
 
-        if not self.debug_mode:
+        if not self.DEBUG_MODE:
             DEBUG_MSG = "To enable debug mode, see :help headlights_debug_mode%(sep)s" % locals()
 
         WARNING_MSG = "Warning: Headlights failed to execute menu command. %(DEBUG_MSG)s" % locals()
@@ -582,19 +533,27 @@ class Headlights():
             pass
 
         finally:
-            if self.debug_mode:
+            if self.DEBUG_MODE:
                 self.do_debug()
 
         self.menus.sort(key=lambda menu: menu.lower())
 
         # only reset the buffer submenu, if it exists
         # this is faster than resetting everything, as it seems that vim will only attach new menus
-        # annoying side effect: new menus (for eg, via autoload) will go to the bottom and mess up the order
+        # annoying side effect: new menus (for eg, via autoload) will go to the bottom and mess up the order TODO: fix
         vim.command("try | aunmenu %(root)s.⁣⁣buffer | catch /E329/ | endtry" % locals())
+        #import cProfile
+        #self.DEBUG_MODE = False
+        #cProfile.runctx("vim.command('try | aunmenu %(root)s.⁣⁣buffer | catch /E329/ | endtry' % locals())", globals(), locals())
 
         # attach the vim menus (and recover gracefully)
-        [vim.command("try | %(menu_command)s | catch // | echomsg '%(WARNING_MSG)s' | endtry" % locals())
-                for menu_command in self.menus]
+        # TODO: the vim try catch doesn't actually work... breaks the script on error. fix
+        #[vim.command("try | %(menu_command)s | catch // | echomsg '%(WARNING_MSG)s' | endtry" % locals())
+                #for menu_command in self.menus]
+        [vim.command("%(menu_command)s" % locals()) for menu_command in self.menus]
+        #import cProfile
+        #self.DEBUG_MODE = False
+        #cProfile.runctx("[vim.command('%(menu_command)s' % locals()) for menu_command in self.menus]", globals(), locals())
 
     def do_debug(self):
         """Attach the debug menu and write the log file."""
