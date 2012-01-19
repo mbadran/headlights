@@ -152,8 +152,6 @@ hosted at Vim.org:
 
 <http://www.vim.org/scripts/script.php?script_id=3455>
 
-Send feedback and untold riches to mebadran _AT_ gmail.
-
 ==============================================================================
 CHANGELOG                                               *headlights-changelog*
 
