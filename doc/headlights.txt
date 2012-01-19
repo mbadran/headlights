@@ -93,6 +93,14 @@ Create menus for global bundle functions: >
 <
 Default value: 0
 
+                                                  *headlights_show_load_order*
+
+Create menus for load order of plugin files: >
+
+    let g:headlights_show_load_order = 1
+<
+Default value: 0
+
                                                        *headlights_debug_mode*
 
 Enable debug mode and create menus to access the log file: >
