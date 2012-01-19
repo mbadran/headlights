@@ -36,7 +36,7 @@ The Manual Way
 
 3. Run the following Vim command:
 
-    `helptags ~/.vim/doc/`
+    `helptags ~/.vim/<plugin_dir>/<headlights_dir>/doc/`
 
 Further Reading
 ===============
