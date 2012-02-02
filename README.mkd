@@ -32,26 +32,29 @@ The Manual Way
 
 1. [Download the latest package] [4].
 
-2. Expand the archive's contents into your `.vim` directory.
+2. Expand the archive's contents into your `vim` directory.
 
 3. Run the following Vim command:
 
-    `helptags ~/.vim/<plugin_dir>/<headlights_dir>/doc/`
+    `helptags <vim_dir>/<plugin_dir>/<headlights_dir>/doc/`
 
 Further Reading
 ===============
 
-Refer to the Headlights help menu:
+Refer to the Headlights help document:
 
-    `Bundles > a - i > headlights > Help`
+    Bundles > a - i > headlights > Help
+
+    :help headlights
 
 Protip
 ------
 
-On Mac OS X, you can quickly edit any plugin script by typing its name. Hit
-Cmd-? to bring up a search dialog for menu items, then type `fugitive open`,
-for example, to reveal the `fugitive.vim` menu item as the first result. I use
-this like, _all the time_.
+If you use Mac OS X, you can quickly access any plugin by typing its name. For
+example, hit `CMD-?` to bring up a search dialog for menu items, then type
+`fugitive open` to reveal the `fugitive.vim` menu item as the first result. You
+can also type `fugitive help` to quickly access the documentation. I do this
+like, _all the time_.
 
 [1]: http://www.vim.org/
 
