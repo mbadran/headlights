@@ -9,15 +9,17 @@ class Headlights():
     MENU_ROOT = sys.argv[0]
     SHOW_FILES = sys.argv[1]
     SHOW_LOAD_ORDER = sys.argv[2]
-    DEBUG_MODE = sys.argv[3]
-    MODE_MAP = sys.argv[4]
-    SOURCE_LINE = sys.argv[5]
-    MENU_TRUNC_LIMIT = sys.argv[6]
-    MENU_SPILLOVER_PATTERNS = sys.argv[7]
-    COMMAND_PATTERN = sys.argv[8]
-    MAPPING_PATTERN = sys.argv[9]
-    ABBREV_PATTERN = sys.argv[10]
-    SCRIPTNAME_PATTERN = sys.argv[11]
+    SMART_MENUS = sys.argv[3]
+    DEBUG_MODE = sys.argv[4]
+    MODE_MAP = sys.argv[5]
+    SOURCE_LINE = sys.argv[6]
+    MENU_TRUNC_LIMIT = sys.argv[7]
+    MENU_SPILLOVER_PATTERNS = sys.argv[8]
+    COMMAND_PATTERN = sys.argv[9]
+    MAPPING_PATTERN = sys.argv[10]
+    ABBREV_PATTERN = sys.argv[11]
+    SCRIPTNAME_PATTERN = sys.argv[12]
+    VIM_DIR_PATTERNS = sys.argv[13]
 
     sanitise_menu = lambda self, menu: menu.replace("\\", "\\\\").replace("|", "\\|").replace(".", "\\.").replace(" ", "\\ ").replace("<", "\\<")
 
@@ -40,16 +42,67 @@ class Headlights():
         self.attach_menus()
 
         # for quick profiling, enable
-        #import cProfile
-        #self.DEBUG_MODE = False
-        #cProfile.runctx("self.attach_menus()", globals(), locals())
+        # import cProfile
+        # self.DEBUG_MODE = False
+        # cProfile.runctx("self.attach_menus()", globals(), locals())
 
     def init_bundle(self, path, order):
         """Initialise new bundles (aka scripts/plugins)."""
 
+        # use the filename as the default bundle name
         name = os.path.splitext(os.path.basename(path))[0]
 
-        self.bundles[path] = {"order": order, "name": name, "commands": [], "mappings": [], "abbreviations": [], "functions": [], "buffer": False}
+        # use the file dir as the default bundle root
+        root = os.path.dirname(path)
+
+        if self.SMART_MENUS:
+            # find the actual bundle root (ignoring runtime bundles). break out of standard vim dirs, if necessary.
+            if not root.lower().find("/runtime/") > -1:
+                for pattern in self.VIM_DIR_PATTERNS:
+                    if re.match(pattern, root):
+                        # print("*** old root: " + root)
+                        # print("*** old name: " + name)
+                        parent = re.sub("/\w+$", "", root)
+                        # make sure we're not in a nested dir (eg. autoload, ftplugin, after)
+                        while re.match(pattern, parent):
+                            parent = re.sub("/\w+$", "", parent)
+
+                        # ignore bundles in the vim dir (TODO: test/why?)
+                        if parent != os.getenv("HOME"):
+                            # set the parent path as the new root
+                            root = parent
+                            # set the name of the parent dir as the new name
+                            name = os.path.splitext(os.path.basename(parent))[0]
+                            # print("*** new root: " + root)
+                            # print("*** new name: " + name)
+
+                        break
+
+            # now that we (probably) know the root, check previous bundles for a matching root
+            # ignore vimrc files and bundles in the runtime dir
+            if path.find("/runtime/") == -1 and not name.endswith("vimrc"):
+                for key in iter(self.bundles.keys()):
+                    if root == self.bundles[key]["root"]:
+                        # print("-------------")
+                        # print("$$$ found a previous script with matching root for: " + name)
+                        # print("this root: " + root)
+                        # print("existing bundle root: " + self.bundles[key]["root"])
+                        # if we have a match, group the bundles together by the previous name
+                        name = self.bundles[key]["name"]
+                        # print("new name: " + name)
+                        # print("-------------")
+                        break
+
+        self.bundles[path] = {
+            "order": order,
+            "name": name,
+            "root": root,
+            "commands": [],
+            "mappings": [],
+            "abbreviations": [],
+            "functions": [],
+            "buffer": False
+        }
 
         return self.bundles[path]
 
@@ -65,9 +118,7 @@ class Headlights():
         # and exclude vimrc files from buffer local menus (for simplicity)
         if self.bundles[path]["name"].endswith("vimrc"):
             spillover = "⁣vimrc"
-        elif self.bundles[path]["buffer"]:
-            spillover = "⁣⁣buffer"
-        elif path.lower().find("runtime") > -1:
+        elif path.lower().find("/runtime/") > -1:
             spillover = "⁣runtime"
         else:
             for pattern, category in list(self.MENU_SPILLOVER_PATTERNS.items()):
@@ -77,27 +128,12 @@ class Headlights():
 
         return spillover
 
-    def gen_menus(self):
-        """Add the root menu and coordinate menu categories."""
-
-        root = self.MENU_ROOT
-
-        for path, properties in iter(self.bundles.items()):
-            load_order = properties["order"]
-
-            name = properties["name"]
-
-            spillover = self.sanitise_menu(self.get_spillover(name, path))
-
-            name = self.sanitise_menu(name)
-
-            prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
-
+    def gen_menus(self, name, prefix, path, properties):
             # this needs to be first so sort() can get the script order right
             self.gen_help_menu(name, prefix)
 
             if self.SHOW_FILES:
-                self.gen_files_menu(path, prefix, load_order)
+                self.gen_files_menu(path, prefix, properties["order"])
 
             if len(properties["commands"]) > 0:
                 self.gen_commands_menu(properties["commands"], prefix)
@@ -479,7 +515,21 @@ class Headlights():
                     function = getattr(self, "parse_" + key)
                     function(self.categories[key].strip().split("\n"))
 
-            self.gen_menus()
+            for path, properties in iter(self.bundles.items()):
+                name = properties["name"]
+
+                spillover = self.sanitise_menu(self.get_spillover(name, path))
+
+                name = self.sanitise_menu(name)
+
+                prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
+
+                self.gen_menus(name, prefix, path, properties)
+
+                # duplicate local buffer menus for convenience
+                if self.bundles[path]["buffer"]:
+                    prefix = "%(root)s.⁣⁣buffer.%(name)s." % locals()
+                    self.gen_menus(name, prefix, path, properties)
 
         # recover (somewhat) gracefully
         except Exception:
@@ -495,9 +545,8 @@ class Headlights():
 
         self.menus.sort(key=lambda menu: menu.lower())
 
-        # only reset the buffer submenu, if it exists
-        # this is faster than resetting everything, as it seems that vim will only attach new menus
-        # annoying side effect: new menus (for eg, via autoload) will go to the bottom and mess up the order TODO: fix
+        # only reset the buffer submenu, if it exists (faster than resetting everything, since vim will only attach new menus)
+        # disadvantage: new menus (for eg, via autoload) will go to the bottom, messing up the alphabetical order
         vim.command("try | aunmenu %(root)s.⁣⁣buffer | catch /E329/ | endtry" % locals())
         #import cProfile
         #self.DEBUG_MODE = False
