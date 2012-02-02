@@ -1,5 +1,5 @@
 " Headlights - Know Thy Bundles.
-" Version: 1.3
+" Version: 1.4
 " Home: <www.vim.org/scripts/script.php?script_id=3455>
 " Development:	<github.com/mbadran/headlights>
 " Maintainer:	Mohammed Badran <mebadran _AT_ gmail>
