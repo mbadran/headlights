@@ -158,9 +158,9 @@ TIPS                                                         *headlights-tips*
 
 If you use Mac OS X, you can quickly access any bundle by typing its name. For
 example, hit CMD-? to bring up a search dialog for menu items, then type
-'fugitive open' to reveal the 'fugitive.vim' menu item as the first result. You
-can also type 'fugitive help' to quickly access the documentation. I do this
-like, _all the time_.
+'fugitive open' to reveal the 'fugitive.vim' file as the first result. You can
+also type 'fugitive help' to quickly access the documentation. I do this like,
+_all the time_.
 
 ==============================================================================
 ABOUT                                                       *headlights-about*
