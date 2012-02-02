@@ -14,9 +14,11 @@ CONTENTS                                                          *headlights*
     1. Introduction _______________________________________ |headlights-intro|
     2. Options __________________________________________ |headlights-options|
     3. Issues ____________________________________________ |headlights-issues|
-    4. About ______________________________________________ |headlights-about|
-    5. Changelog ______________________________________ |headlights-changelog|
-    6. Licence __________________________________________ |headlights-licence|
+    4. Performance __________________________________ |headlights-performance|
+    5. Tips ________________________________________________ |headlights-tips|
+    6. About ______________________________________________ |headlights-about|
+    7. Changelog ______________________________________ |headlights-changelog|
+    8. Licence __________________________________________ |headlights-licence|
 
 ==============================================================================
 INTRODUCTION                                                *headlights-intro*
@@ -43,7 +45,7 @@ experience -- nay, your quality of life.
 OPTIONS                                                   *headlights-options*
 
 Note: For performance reasons, only 'commands' and 'mappings' are enabled by
-default. See |headlights-issues| for details.
+default. See |headlights-performance| for details.
 
                                                   *headlights_use_plugin_menu*
 
@@ -101,6 +103,15 @@ Create menus for load order of plugin files: >
 <
 Default value: 0
 
+
+                                                  *headlights_smart_menus*
+
+Group bundles that share the same root together: >
+
+    let g:headlights_smart_menus = 1
+<
+Default value: 1
+
                                                        *headlights_debug_mode*
 
 Enable debug mode and create menus to access the log file: >
@@ -125,15 +136,15 @@ In the event of a problem, please raise a new project issue at:
 
 <https://github.com/mbadran/headlights/issues>
 
-Be sure to reference the debug log. You can upload it to a paste service like
-<http://pastebin.com>.
+Be sure to reference the debug log in the issue or in a public Gist.
 
 Lastly, I welcome any pull requests, so feel free to Fork, Fix, Send.
 
-A NOTE ON PERFORMANCE
+==============================================================================
+PERFORMANCE                                           *headlights-performance*
 
 Headlights can slow Vim down when a large number of bundles are loaded, or when
-hardware resources are limited. This is partly because adding menus to Vim is an
+hardware resources are limited. This is mostly because adding menus to Vim is an
 expensive operation which can take over half the total execution time.
 
 This is why most configuration options are disabled by default.
@@ -141,6 +152,15 @@ This is why most configuration options are disabled by default.
 If you experience slowness when launching Vim or switching buffers, disable some
 or all configuration options, and consider troubleshooting further or raising a
 project issue.
+
+==============================================================================
+TIPS                                                         *headlights-tips*
+
+If you use Mac OS X, you can quickly access any bundle by typing its name. For
+example, hit CMD-? to bring up a search dialog for menu items, then type
+'fugitive open' to reveal the 'fugitive.vim' menu item as the first result. You
+can also type 'fugitive help' to quickly access the documentation. I do this
+like, _all the time_.
 
 ==============================================================================
 ABOUT                                                       *headlights-about*
@@ -154,6 +174,11 @@ hosted at Vim.org:
 
 ==============================================================================
 CHANGELOG                                               *headlights-changelog*
+
+1.4
+    - menus are now intelligently grouped by bundle (optional)
+    - autoload bundles are now properly duplicated in the buffer menu
+    - refactoring and performance tweaks
 
 1.3
     - added plugin load order
