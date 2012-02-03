@@ -3,7 +3,7 @@
 class Headlights():
     """
     Python helper class for headlights.vim
-    Version: 1.4
+    Version: 1.4.1
     """
 
     MENU_ROOT = sys.argv[0]
