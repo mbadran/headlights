@@ -95,6 +95,14 @@ Create menus for global bundle functions: >
 <
 Default value: 0
 
+                                                  *headlights_show_highlights*
+
+Create menus for bundle highlights: >
+
+    let g:headlights_show_highlights = 1
+<
+Default value: 0
+
                                                   *headlights_show_load_order*
 
 Create menus for load order of plugin files: >
