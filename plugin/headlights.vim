@@ -1,5 +1,5 @@
 " Headlights - Know Thy Bundles.
-" Version: 1.4
+" Version: 1.4.1
 " Home: <www.vim.org/scripts/script.php?script_id=3455>
 " Development:	<github.com/mbadran/headlights>
 " Maintainer:	Mohammed Badran <mebadran _AT_ gmail>
@@ -216,7 +216,7 @@ endfunction
 function! s:RequestVimMenus() " {{{1
   " requests the bundle menus from the helper python script
 
-  " time the excution of the vim commands
+  " time the execution of the vim commands
   python time_start = time.time()
 
 	call s:InitBundleData()
