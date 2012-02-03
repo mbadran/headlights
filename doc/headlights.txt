@@ -186,6 +186,8 @@ CHANGELOG                                               *headlights-changelog*
 1.4
     - menus are now intelligently grouped by bundle (optional)
     - autoload bundles are now properly duplicated in the buffer menu
+    - new category: highlights
+    - usability improvements
     - refactoring and performance tweaks
 
 1.3
