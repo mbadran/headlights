@@ -18,10 +18,7 @@ catch /E319/    " no python
 endtry
 
 if v:version < 700 || exists('s:invalid_python')
-  " fail unobtrusively in the terminal
-  if has('gui_running')
-    echomsg 'Headlights requires Vim 7+ compiled with Python 2.6+ support.'
-  endif
+  echomsg 'Headlights requires Vim 7+ compiled with Python 2.6+ support.'
   finish
 endif
 
@@ -39,6 +36,7 @@ let s:show_commands = exists('g:headlights_show_commands')? g:headlights_show_co
 let s:show_mappings = exists('g:headlights_show_mappings')? g:headlights_show_mappings : 1
 let s:show_abbreviations = exists('g:headlights_show_abbreviations')? g:headlights_show_abbreviations : 0
 let s:show_functions = exists('g:headlights_show_functions')? g:headlights_show_functions : 0
+let s:show_highlights = exists('g:headlights_show_highlights')? g:headlights_show_highlights : 0
 let s:show_load_order = exists('g:headlights_show_load_order')? g:headlights_show_load_order : 0
 let s:smart_menus = exists('g:headlights_smart_menus')? g:headlights_smart_menus : 1
 let s:debug_mode = exists('g:headlights_debug_mode')? g:headlights_debug_mode : 0
@@ -139,6 +137,16 @@ SCRIPTNAME_PATTERN = re.compile(r'''
     $
     ''', re.VERBOSE)
 
+HIGHLIGHT_PATTERN = re.compile(r'''
+    ^
+    (?P<group>\w+)?
+    \\s+
+    xxx
+    \\s+
+    (?P<arguments>.+)
+    $
+    ''', re.VERBOSE | re.IGNORECASE)
+
 # TODO: review/find other standard vim/plugin dir
 VIM_DIR_PATTERNS = [
     re.compile(r".+/after(/.*)?$", re.IGNORECASE),
@@ -174,6 +182,7 @@ sys.argv = [vim.eval("s:menu_root"),
     COMMAND_PATTERN,
     MAPPING_PATTERN,
     ABBREV_PATTERN,
+    HIGHLIGHT_PATTERN,
     SCRIPTNAME_PATTERN,
     VIM_DIR_PATTERNS]
 
@@ -201,6 +210,7 @@ function! s:InitBundleData() " {{{1
 	let s:mappings = s:show_mappings? s:GetVimCommandOutput('map') . s:GetVimCommandOutput('map!') : ''
 	let s:abbreviations = s:show_abbreviations? s:GetVimCommandOutput('abbreviate') : ''
 	let s:functions = s:show_functions? s:GetVimCommandOutput('function') : ''
+	let s:highlights = s:show_highlights? s:GetVimCommandOutput('highlight') : ''
 endfunction
 
 function! s:RequestVimMenus() " {{{1
@@ -221,7 +231,8 @@ try:
         commands = vim.eval("s:commands"),
         mappings = vim.eval("s:mappings"),
         abbreviations = vim.eval("s:abbreviations"),
-        functions = vim.eval("s:functions"))
+        functions = vim.eval("s:functions"),
+        highlights = vim.eval("s:highlights"))
 
 except Exception:
     import traceback
