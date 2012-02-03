@@ -365,7 +365,6 @@ class Headlights():
                     source_script = self.get_source_script(commands[i + 1])
 
                     if matches.group("buffer"):
-                        # command = "@ " + command
                         source_script["buffer"] = True
 
                     source_script["commands"].append([command, definition])
@@ -420,7 +419,6 @@ class Headlights():
 
                     # flag the bundle as buffer local, and prepend an indicator to the mapping
                     if matches.group("buffer"):
-                        # lhs = "@ " + lhs
                         source_script["buffer"] = True
 
                     # add the mapping to the source script
@@ -462,7 +460,6 @@ class Headlights():
 
                     # flag the bundle as buffer local, and prepend an indicator to the mapping
                     if matches.group("buffer"):
-                        # lhs = "@ " + lhs
                         source_script["buffer"] = True
 
                     # add the abbreviation to the source script
