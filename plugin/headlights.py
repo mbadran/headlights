@@ -3,7 +3,7 @@
 class Headlights():
     """
     Python helper class for headlights.vim
-    Version: 1.4.1
+    Version: 1.4.2
     """
 
     MENU_ROOT = sys.argv[0]
@@ -121,26 +121,26 @@ class Headlights():
         return spillover
 
     def gen_menus(self, name, prefix, path, properties):
-            # this needs to be first so sort() can get the script order right
-            self.gen_help_menu(name, prefix)
+        # this needs to be first so sort() can get the script order right
+        self.gen_help_menu(name, prefix)
 
-            if self.SHOW_FILES:
-                self.gen_files_menu(path, prefix, properties["order"])
+        if self.SHOW_FILES:
+            self.gen_files_menu(path, prefix, properties["order"])
 
-            if len(properties["commands"]) > 0:
-                self.gen_commands_menu(properties["commands"], prefix)
+        if len(properties["commands"]) > 0:
+            self.gen_commands_menu(properties["commands"], prefix)
 
-            if len(properties["mappings"]) > 0:
-                self.gen_mappings_menu(properties["mappings"], prefix)
+        if len(properties["mappings"]) > 0:
+            self.gen_mappings_menu(properties["mappings"], prefix)
 
-            if len(properties["abbreviations"]) > 0:
-                self.gen_abbreviations_menu(properties["abbreviations"], prefix)
+        if len(properties["abbreviations"]) > 0:
+            self.gen_abbreviations_menu(properties["abbreviations"], prefix)
 
-            if len(properties["functions"]) > 0:
-                self.gen_functions_menu(properties["functions"], prefix)
+        if len(properties["functions"]) > 0:
+            self.gen_functions_menu(properties["functions"], prefix)
 
-            if len(properties["highlights"]) > 0:
-                self.gen_highlights_menu(properties["highlights"], prefix)
+        if len(properties["highlights"]) > 0:
+            self.gen_highlights_menu(properties["highlights"], prefix)
 
     def gen_commands_menu(self, commands, prefix):
         """Add command menus."""
@@ -151,7 +151,7 @@ class Headlights():
             name = self.sanitise_menu(command[0])
             definition = self.sanitise_menu(command[1])
 
-            command_item = "amenu <silent> %(item_priority)s %(prefix)sCommands.%(name)s<Tab>Run\ command :%(name)s<CR>" % locals()
+            command_item = "amenu <silent> %(item_priority)s %(prefix)sCommands.%(name)s :%(name)s<CR>" % locals()
             self.menus.append(command_item)
 
     def gen_files_menu(self, path, prefix, load_order):
@@ -496,7 +496,12 @@ class Headlights():
             if not line.find(self.SOURCE_LINE) > -1:
                 matches = self.HIGHLIGHT_PATTERN.match(line)
 
-                group = matches.group("group")
+                try:
+                    group = matches.group("group")
+                except AttributeError:
+                    # not a typical highlight command, ignore
+                    continue
+
                 arguments = matches.group("arguments")
 
                 if not arguments.startswith("cleared") and not arguments.startswith("links to "):
@@ -513,7 +518,10 @@ class Headlights():
                         terminal_list[terminal] = attribute_list
 
                     # add the highlights to the source script
-                    source_script["highlights"].append([group, terminal_list])
+                    try:
+                        source_script["highlights"].append([group, terminal_list])
+                    except TypeError:
+                        continue
 
     def attach_menus(self):
         """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
