@@ -184,6 +184,10 @@ hosted at Vim.org:
 ==============================================================================
 CHANGELOG                                               *headlights-changelog*
 
+1.4.2
+    - highlights bug fix
+    - doc updates
+
 1.4.1
     - usability fixes
     - doc updates
