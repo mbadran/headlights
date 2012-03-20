@@ -23,24 +23,15 @@ CONTENTS                                                          *headlights*
 ==============================================================================
 INTRODUCTION                                                *headlights-intro*
 
-Headlights adds a 'bundles' menu [1] to Vim, revealing your bundles (aka.
+Headlights adds a 'bundles' [^1] menu to Vim, revealing your bundles (aka.
 plugins) and the features they provide.
 
-Headlights creates a menu for each currently loaded [2] bundle, grouping
+Headlights creates a menu for each currently loaded [^2] bundle, grouping
 together docs, commands, mappings, abbreviations, functions, highlights, and
 plugin files.
 
 Combined with a powerful bundle manager, Headlights will improve your Vim user
 experience -- nay, your quality of life.
-
-------------------------------------------------------------------------------
-
-[1]: Headlights is inspired by TextMate's Bundles menu.
-
-[2]: Headlights mirrors Vim's 'scriptnames' command, revealing only the
-     bundles that are currently loaded. This is fast because it avoids file
-     system access, but the trade off is that autoload bundles and ftplugins
-     are not revealed until they are needed. (This is Good Enough ™.)
 
 ==============================================================================
 OPTIONS                                                   *headlights-options*
@@ -50,83 +41,83 @@ default. See |headlights-performance| for details.
 
                                                   *headlights_use_plugin_menu*
 
-Reuse the conventional 'plugin' menu instead of creating a new one: >
+Reuse the conventional 'plugin' menu instead of creating a new one:
 
     let g:headlights_use_plugin_menu = 1
-<
+
 Default value: 0
 
                                                        *headlights_show_files*
 
-Create menus for bundle script files: >
+Create menus for bundle script files:
 
     let g:headlights_show_files = 1
-<
+
 Default value: 0
 
                                                     *headlights_show_commands*
 
-Create menus for bundle commands: >
+Create menus for bundle commands:
 
     let g:headlights_show_commands = 1
-<
+
 Default value: 1
 
                                                     *headlights_show_mappings*
 
-Create menus for bundle mappings: >
+Create menus for bundle mappings:
 
     let g:headlights_show_mappings = 1
-<
+
 Default value: 1
 
                                                *headlights_show_abbreviations*
 
-Create menus for bundle abbreviations: >
+Create menus for bundle abbreviations:
 
     let g:headlights_show_abbreviations = 1
-<
+
 Default value: 0
 
                                                    *headlights_show_functions*
 
-Create menus for global bundle functions: >
+Create menus for global bundle functions:
 
     let g:headlights_show_functions = 1
-<
+
 Default value: 0
 
                                                   *headlights_show_highlights*
 
-Create menus for bundle highlights: >
+Create menus for bundle highlights:
 
     let g:headlights_show_highlights = 1
-<
+
 Default value: 0
 
                                                   *headlights_show_load_order*
 
-Create menus for load order of plugin files: >
+Create menus for load order of plugin files:
 
     let g:headlights_show_load_order = 1
-<
+
 Default value: 0
 
 
                                                   *headlights_smart_menus*
 
-Group bundles that share the same root together: >
+Group bundles that share the same root together:
 
     let g:headlights_smart_menus = 1
-<
+
 Default value: 1
 
                                                        *headlights_debug_mode*
 
-Enable debug mode and create menus to access the log file: >
+Enable debug mode and create menus to access the log file:
 
     let g:headlights_debug_mode = 1
-<
+
 Default value: 0 (1 in the event of a Headlights exception)
 
 Note: If you manually enable this option, remember to disable it after
@@ -152,15 +143,16 @@ Lastly, I welcome any pull requests, so feel free to Fork, Fix, Send.
 ==============================================================================
 PERFORMANCE                                           *headlights-performance*
 
-Headlights can slow Vim down when a large number of bundles are loaded, or when
-hardware resources are limited. This is mostly because adding menus to Vim is an
-expensive operation which can take over half the total execution time.
+Headlights takes measures to avoid impacting the responsiveness of Vim. Adding
+menus to Vim is an expensive operation, so most menu categories in Headlights
+must be explicitly enabled. In addition, Headlights waits for the CursorHold
+event before performing any menu updates, which ensures that switching
+buffers, windows, and tabs occurs smoothly.
 
-This is why most configuration options are disabled by default.
-
-If you experience slowness when launching Vim or switching buffers, disable some
-or all configuration options, and consider troubleshooting further or raising a
-project issue.
+That said, Headlights may slow Vim down when a large number of bundles are
+loaded, or when hardware resources are limited. If you experience slowness
+when launching Vim or working with buffers, disable some or all configuration
+options, and consider troubleshooting further or raising a project issue.
 
 ==============================================================================
 TIPS                                                         *headlights-tips*
@@ -183,6 +175,11 @@ hosted at Vim.org:
 
 ==============================================================================
 CHANGELOG                                               *headlights-changelog*
+
+1.5
+    - refactoring
+    - huge performance boost (wait for cursorhold)
+    - doc updates
 
 1.4.2
     - highlights bug fix
@@ -234,3 +231,12 @@ CHANGELOG                                               *headlights-changelog*
 LICENCE                                                   *headlights-licence*
 
 Headlights is released in the public domain.
+
+------------------------------------------------------------------------------
+
+[^1]: Headlights is inspired by TextMate's Bundles menu.
+
+[^2]: Headlights mirrors Vim's 'scriptnames' command, revealing only the
+      bundles that are currently loaded. This is fast because it avoids file
+      system access, but the trade off is that autoload and ftplugin scripts
+      are not revealed until they are needed. (This is Good Enough ™.)
