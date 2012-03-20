@@ -112,6 +112,14 @@ Group bundles that share the same root together:
 
 Default value: 1
 
+                                                   *headlights_unprefix_names*
+
+Remove the superfluous 'vim-' prefix from bundle names:
+
+    let g:headlights_unprefix_names = 1
+
+Default value: 1
+
                                                        *headlights_debug_mode*
 
 Enable debug mode and create menus to access the log file:
@@ -179,6 +187,7 @@ CHANGELOG                                               *headlights-changelog*
 1.5
     - refactoring
     - huge performance boost (wait for cursorhold)
+    - strip the 'vim-' prefix from bundle names (configurable)
     - doc updates
 
 1.4.2
