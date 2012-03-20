@@ -62,9 +62,9 @@ Using [Vundle] [3]:
 
 Refer to the Headlights help document:
 
-    Bundles > a - i > headlights > Help
+`Bundles > a - i > headlights > Help`
 
-    :help headlights
+`:help headlights`
 
 ### Protip
 
