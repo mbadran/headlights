@@ -1,5 +1,5 @@
 " Headlights - Know Thy Bundles.
-" Version: 1.4.2
+" Version: 1.5
 " Home: <www.vim.org/scripts/script.php?script_id=3455>
 " Development:	<github.com/mbadran/headlights>
 " Maintainer:	Mohammed Badran <mebadran _AT_ gmail>
@@ -147,7 +147,6 @@ HIGHLIGHT_PATTERN = re.compile(r'''
     $
     ''', re.VERBOSE | re.IGNORECASE)
 
-# TODO: review/find other standard vim/plugin dir
 VIM_DIR_PATTERNS = [
     re.compile(r".+/after(/.*)?$", re.IGNORECASE),
     re.compile(r".+/autoload(/.*)?$", re.IGNORECASE),
@@ -216,18 +215,19 @@ endfunction
 function! s:RequestVimMenus() " {{{1
   " requests the bundle menus from the helper python script
 
-  " time the execution of the vim commands
-  python time_start = time.time()
+  if !exists("b:headlights_buffer_updated")
+    " time the execution of the vim commands
+    python start_time = time.time()
 
-	call s:InitBundleData()
+    call s:InitBundleData()
 
-  execute 'pyfile ' . s:scriptdir . 'headlights.py'
+    execute 'pyfile ' . s:scriptdir . 'headlights.py'
 
 python << endpython
 
 try:
-    headlights = Headlights(vim_time = time.time() - time_start,
-        scriptnames = vim.eval("s:scriptnames"),
+    run_headlights(vim_time = float(time.time() - start_time),
+        vim_scriptnames = vim.eval("s:scriptnames"),
         commands = vim.eval("s:commands"),
         mappings = vim.eval("s:mappings"),
         abbreviations = vim.eval("s:abbreviations"),
@@ -240,11 +240,27 @@ except Exception:
 
 endpython
 
+    let b:headlights_buffer_updated = 1
+  endif
+endfunction
+
+function! s:ResetBufferState() " {{{1
+  " remove the local buffer's menu and reset its state
+
+  if exists("b:headlights_buffer_updated")
+    unlet b:headlights_buffer_updated
+  endif
+
+  try
+    execute "aunmenu " . s:menu_root . ".⁣⁣buffer"
+  catch /E329/
+  endtry
 endfunction
 
 " controller {{{1
 
-autocmd GUIEnter,BufEnter,FileType * call s:RequestVimMenus()
+autocmd GUIEnter,CursorHold * call s:RequestVimMenus()
+autocmd BufLeave * call s:ResetBufferState()
 
 " boilerplate {{{1
 
