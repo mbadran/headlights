@@ -9,17 +9,16 @@ SHOW_FILES = sys.argv[1]
 SHOW_LOAD_ORDER = sys.argv[2]
 SMART_MENUS = sys.argv[3]
 DEBUG_MODE = sys.argv[4]
-UNPREFIX_NAMES = sys.argv[5]
-MODE_MAP = sys.argv[6]
-SOURCE_LINE = sys.argv[7]
-MENU_TRUNC_LIMIT = sys.argv[8]
-MENU_SPILLOVER_PATTERNS = sys.argv[9]
-COMMAND_PATTERN = sys.argv[10]
-MAPPING_PATTERN = sys.argv[11]
-ABBREV_PATTERN = sys.argv[12]
-HIGHLIGHT_PATTERN = sys.argv[13]
-SCRIPTNAME_PATTERN = sys.argv[14]
-VIM_DIR_PATTERNS = sys.argv[15]
+MODE_MAP = sys.argv[5]
+SOURCE_LINE = sys.argv[6]
+MENU_TRUNC_LIMIT = sys.argv[7]
+MENU_SPILLOVER_PATTERNS = sys.argv[8]
+COMMAND_PATTERN = sys.argv[9]
+MAPPING_PATTERN = sys.argv[10]
+ABBREV_PATTERN = sys.argv[11]
+HIGHLIGHT_PATTERN = sys.argv[12]
+SCRIPTNAME_PATTERN = sys.argv[13]
+VIM_DIR_PATTERNS = sys.argv[14]
 
 # global context vars
 bundles = {}
@@ -85,9 +84,13 @@ def init_bundle(path, order):
                     name = bundles[key]["name"]
                     break
 
-    # remove the superfluous 'vim-' prefix from bundle names
-    if name.startswith("vim-") and UNPREFIX_NAMES:
+    # remove the 'vim-' prefix from bundle names (a source control project thing)
+    if name.startswith("vim-"):
         name = name[4:]
+
+    # remove the '_vim' suffix from bundle names (a source control project thing)
+    if name.endswith("_vim"):
+        name = name[:-4]
 
     bundles[path] = {
         "order": order,
