@@ -40,7 +40,6 @@ let s:show_highlights = exists('g:headlights_show_highlights')? g:headlights_sho
 let s:show_load_order = exists('g:headlights_show_load_order')? g:headlights_show_load_order : 0
 let s:smart_menus = exists('g:headlights_smart_menus')? g:headlights_smart_menus : 1
 let s:debug_mode = exists('g:headlights_debug_mode')? g:headlights_debug_mode : 0
-let s:unprefix_names = exists('g:headlights_unprefix_names')? g:headlights_unprefix_names : 1
 
 let s:menu_root = s:use_plugin_menu? 'Plugin.headlights' : 'Bundles'
 
@@ -175,7 +174,6 @@ sys.argv = [vim.eval("s:menu_root"),
     bool(int(vim.eval("s:show_load_order"))),
     bool(int(vim.eval("s:smart_menus"))),
     bool(int(vim.eval("s:debug_mode"))),
-    bool(int(vim.eval("s:unprefix_names"))),
     MODE_MAP,
     SOURCE_LINE,
     MENU_TRUNC_LIMIT,
