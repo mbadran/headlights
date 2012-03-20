@@ -3,7 +3,7 @@
 Headlights adds a `Bundles` [^1] menu to Vim, revealing your bundles (aka.
 plugins) and the features they provide.
 
-Headlights creates a menu for each _currently loaded_ [^2] bundle, grouping
+Headlights creates a menu for each currently loaded [^2] bundle, grouping
 together docs, commands, mappings, abbreviations, functions, highlights, and
 plugin files.
 
