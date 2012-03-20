@@ -76,7 +76,7 @@ _all the time_.
 
 [^1]: Headlights is inspired by TextMate's Bundles menu.
 
-[^2]: Headlights mirrors Vim's 'scriptnames' command, revealing only the
+[^2]: Headlights mirrors Vim's `scriptnames` command, revealing only the
       bundles that are currently loaded. This is fast because it avoids file
       system access, but the trade off is that autoload and ftplugin scripts
       are not revealed until they are needed. (This is Good Enough ™.)
