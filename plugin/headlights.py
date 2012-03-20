@@ -3,6 +3,7 @@
 # Python helper for headlights.vim
 # Version: 1.5
 
+# global configuration vars
 MENU_ROOT = sys.argv[0]
 SHOW_FILES = sys.argv[1]
 SHOW_LOAD_ORDER = sys.argv[2]
@@ -19,13 +20,13 @@ HIGHLIGHT_PATTERN = sys.argv[12]
 SCRIPTNAME_PATTERN = sys.argv[13]
 VIM_DIR_PATTERNS = sys.argv[14]
 
-# global context variables
+# global context vars
 bundles = {}
 menus = []
 errors = []
 start_time = 0
 
-# global data variables
+# global data vars
 vim_execution_time = 0
 scriptnames = ""
 categories = []
@@ -120,6 +121,8 @@ def get_spillover(name, path):
     return spillover
 
 def gen_menus(name, prefix, path, properties):
+    """Generate menus for enabled categories."""
+
     # this needs to be first so sort() can get the script order right
     gen_help_menu(name, prefix)
 
