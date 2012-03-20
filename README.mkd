@@ -42,8 +42,6 @@ Using [Vundle] [3]:
 
 `let g:headlights_smart_menus = 1` (Enabled)
 
-`let g:headlights_unprefix_names = 1` (Enabled)
-
 `let g:headlights_show_commands = 1` (Enabled)
 
 `let g:headlights_show_mappings = 1` (Enabled)
