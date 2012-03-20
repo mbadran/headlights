@@ -1,11 +1,11 @@
 ![Headlights in Action][2]
 
-Headlights adds a `Bundles` menu to Vim, revealing your bundles (aka. plugins)
-and the features they provide.
+Headlights adds a `Bundles` [^1] menu to Vim, revealing your bundles (aka.
+plugins) and the features they provide.
 
-Headlights creates a menu for each _currently loaded_ bundle, grouping together
-docs, commands, mappings, abbreviations, functions, highlights, and plugin
-files.
+Headlights creates a menu for each _currently loaded_ [^2] bundle, grouping
+together docs, commands, mappings, abbreviations, functions, highlights, and
+plugin files.
 
 Combined with a powerful bundle manager, Headlights will improve your ~~Vim
 user experience~~ quality of life.
@@ -70,6 +70,13 @@ example, hit `CMD-?` to bring up a search dialog for menu items, then type
 `fugitive open` to reveal the `fugitive.vim` file as the first result. You can
 also type `fugitive help` to quickly access the documentation. I do this, like,
 _all the time_.
+
+[^1]: Headlights is inspired by TextMate's Bundles menu.
+
+[^2]: Headlights mirrors Vim's 'scriptnames' command, revealing only the
+      bundles that are currently loaded. This is fast because it avoids file
+      system access, but the trade off is that autoload and ftplugin scripts
+      are not revealed until they are needed. (This is Good Enough ™.)
 
 [1]: http://www.vim.org/
 
