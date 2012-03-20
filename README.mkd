@@ -10,13 +10,11 @@ plugin files.
 Combined with a powerful bundle manager, Headlights will improve your ~~Vim
 user experience~~ quality of life.
 
-Get Headlights
-==============
+## Get Headlights
 
 __NOTE:__ Headlights requires Vim 7+ compiled with Python 2.6+ support.
 
-The Recommended Way
--------------------
+### The Recommended Way
 
 Using [Vundle] [3]:
 
@@ -28,8 +26,7 @@ Using [Vundle] [3]:
 
     `BundleInstall`
 
-The Manual Way
---------------
+### The Manual Way
 
 1. [Download the latest package] [4].
 
@@ -39,8 +36,7 @@ The Manual Way
 
     `helptags <vim_dir>/<plugin_dir>/<headlights_dir>/doc/`
 
-Explore the Options
-===================
+## Explore the Options
 
     let g:headlights_use_plugin_menu = 0 (Disabled)
     let g:headlights_smart_menus = 1 (Enabled)
@@ -53,8 +49,7 @@ Explore the Options
     let g:headlights_show_load_order = 0 (Disabled)
     let g:headlights_debug_mode = 0 (Disabled)
 
-Go Deeper
-=========
+## Go Deeper
 
 Refer to the Headlights help document:
 
@@ -62,8 +57,7 @@ Refer to the Headlights help document:
 
     :help headlights
 
-Protip
-------
+## Protip
 
 If you use Mac OS X, you can quickly access any plugin by typing its name. For
 example, hit `CMD-?` to bring up a search dialog for menu items, then type
