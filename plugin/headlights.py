@@ -180,15 +180,9 @@ def gen_files_menu(path, prefix, load_order):
         trunc_file_path = "<" + sanitise_menu(path[-MENU_TRUNC_LIMIT:])
 
     if sys.platform == "darwin":
-        # make the file appear in the "file > open recent" menu
-        # also, honour the macvim option, "open files from applications"
-        # (this doesn't take into account terminal vim, but menu access there is probably uncommon)
-        open_cmd = "!open -a MacVim"
-        reveal_cmd = "!open"
-    else:
-        open_cmd = "edit"
+        reveal_cmd = "silent !open"
 
-    open_item = "amenu <silent> %(item_priority)s.10 %(prefix)sFiles.%(trunc_file_path)s.Open\ File<Tab>%(file_path)s :%(open_cmd)s %(file_path_cmd)s<CR>" % locals()
+    open_item = "amenu <silent> %(item_priority)s.10 %(prefix)sFiles.%(trunc_file_path)s.Open\ File<Tab>%(file_path)s :tabnew %(file_path_cmd)s<CR>" % locals()
     menus.append(open_item)
 
     explore_item = "amenu <silent> %(item_priority)s.20 %(prefix)sFiles.%(trunc_file_path)s.Explore\ in\ Vim<Tab>%(file_dir_path)s :Texplore %(file_dir_path_cmd)s<CR>" % locals()
@@ -307,12 +301,9 @@ def gen_debug_menu(log_name):
     menus.append(sep_item)
 
     if sys.platform == "darwin":
-        open_log_cmd = "!open -a MacVim"
         reveal_log_cmd = "!open"
-    else:
-        open_log_cmd = "edit"
 
-    open_item = "amenu <silent> %(open_priority)s %(root)s.debug.Open\ Log<Tab>%(log_name_label)s :%(open_log_cmd)s %(log_name)s<CR>" % locals()
+    open_item = "amenu <silent> %(open_priority)s %(root)s.debug.Open\ Log<Tab>%(log_name_label)s :tabnew %(log_name)s<CR>" % locals()
     menus.append(open_item)
 
     explore_item = "amenu <silent> %(texplore_priority)s %(root)s.debug.Explore\ in\ Vim<Tab>%(log_dir)s :Texplore %(log_dir)s<CR>" % locals()
@@ -399,7 +390,7 @@ def parse_modes(mode):
     modes = list(mode)
 
     # translate to mode descriptions
-    modes = list(map(MODE_MAP.get, modes))
+    modes = [MODE_MAP.get(mode) for mode in modes]
 
     return modes
 
@@ -596,10 +587,10 @@ def attach_menus():
     menus.sort(key=lambda menu: menu.lower())
 
     # attach the vim menus
-    list(map(vim.command, menus))
+    [vim.command("%(menu_command)s" % locals()) for menu_command in menus]
     # import cProfile
     # DEBUG_MODE = False
-    # cProfile.runctx("map(vim.command, menus)", globals(), locals())
+    # cProfile.runctx("[vim.command('%(menu_command)s' % locals()) for menu_command in menus]", globals(), locals())
 
 def do_debug():
     """Attach the debug menu and write the log file."""
