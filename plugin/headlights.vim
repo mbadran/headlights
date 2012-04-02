@@ -259,8 +259,11 @@ endfunction
 
 " controller {{{1
 
-autocmd GUIEnter,CursorHold * call s:RequestVimMenus()
-autocmd BufLeave * call s:ResetBufferState()
+augroup headlights
+  autocmd!
+  autocmd GUIEnter,CursorHold * call s:RequestVimMenus()
+  autocmd BufLeave * call s:ResetBufferState()
+augroup END
 
 " boilerplate {{{1
 
