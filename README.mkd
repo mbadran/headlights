@@ -62,9 +62,9 @@ Using [Vundle] [3]:
 
 Refer to the Headlights help document:
 
-    Bundles > a - i > headlights > Help
+`Bundles > a - i > headlights > Help`
 
-    :help headlights
+`:help headlights`
 
 ### Protip
 
@@ -73,6 +73,8 @@ example, hit `CMD-?` to bring up a search dialog for menu items, then type
 `fugitive open` to reveal the `fugitive.vim` file as the first result. You can
 also type `fugitive help` to quickly access the documentation. I do this, like,
 _all the time_.
+
+* * *
 
 [^1]: Headlights is inspired by TextMate's Bundles menu.
 
