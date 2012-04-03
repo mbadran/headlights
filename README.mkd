@@ -68,11 +68,10 @@ Refer to the Headlights help document:
 
 ### Protip
 
-If you use Mac OS X, you can quickly access any plugin by typing its name. For
-example, hit `CMD-?` to bring up a search dialog for menu items, then type
-`fugitive open` to reveal the `fugitive.vim` file as the first result. You can
-also type `fugitive help` to quickly access the documentation. I do this, like,
-_all the time_.
+If you use MacVim, you can quickly access any plugin by typing its name. For
+example, hit `CMD-?` to bring up a search dialog for menu items, then type `fug
+open` to reveal the `fugitive.vim` file as the first result. You can also type
+`fug help` to quickly access the documentation. I do this, like, _all the time_.
 
 * * *
 
