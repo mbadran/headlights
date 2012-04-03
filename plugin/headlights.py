@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Python helper for headlights.vim
-# Version: 1.5
+# Version: 1.5.1
 
 # global configuration vars
 MENU_ROOT = sys.argv[0]
