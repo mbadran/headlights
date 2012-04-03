@@ -1,5 +1,5 @@
-" Headlights - Know Thy Bundles.
-" Version: 1.5
+" Headlights - Know thy Bundles.
+" Version: 1.5.1
 " Home: <www.vim.org/scripts/script.php?script_id=3455>
 " Development:	<github.com/mbadran/headlights>
 " Maintainer:	Mohammed Badran <mebadran _AT_ gmail>
@@ -259,11 +259,8 @@ endfunction
 
 " controller {{{1
 
-augroup headlights
-  autocmd!
-  autocmd GUIEnter,CursorHold * call s:RequestVimMenus()
-  autocmd BufLeave * call s:ResetBufferState()
-augroup END
+autocmd GUIEnter,CursorHold * call s:RequestVimMenus()
+autocmd BufLeave * call s:ResetBufferState()
 
 " boilerplate {{{1
 
