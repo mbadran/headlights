@@ -14,7 +14,7 @@ user experience~~ quality of life.
 
 __NOTE:__ Headlights requires Vim 7+ compiled with Python 2.6+ support.
 
-### The Recommended Way
+#### The Recommended Way
 
 Using [Vundle] [3]:
 
@@ -26,7 +26,7 @@ Using [Vundle] [3]:
 
     `BundleInstall`
 
-### The Manual Way
+#### The Manual Way
 
 1. [Download the latest package] [4].
 
@@ -66,7 +66,7 @@ Refer to the Headlights help document:
 
 `:help headlights`
 
-### Protip
+#### Protip
 
 If you use MacVim, you can quickly access any plugin by typing its name. For
 example, hit `CMD-?` to bring up a search dialog for menu items, then type `fug
