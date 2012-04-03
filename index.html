@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <title>Headlights by mbadran</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Headlights</h1>
+        <h2>Know Thy Bundles</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/mbadran/headlights/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/mbadran/headlights/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/mbadran/headlights" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <p><img src="https://github.com/mbadran/headlights/raw/master/headlights_ss.png" alt="Headlights in Action"></p>
+
+<p>Headlights adds a <code>Bundles</code> [^1] menu to Vim, revealing your bundles (aka.
+plugins) and the features they provide.</p>
+
+<p>Headlights creates a menu for each currently loaded [^2] bundle, grouping
+together docs, commands, mappings, abbreviations, functions, highlights, and
+plugin files.</p>
+
+<p>Combined with a powerful bundle manager, Headlights will improve your <del>Vim
+user experience</del> quality of life.</p>
+
+<h2>Get Headlights</h2>
+
+<p><strong>NOTE:</strong> Headlights requires Vim 7+ compiled with Python 2.6+ support.</p>
+
+<h4>The Recommended Way</h4>
+
+<p>Using <a href="https://github.com/gmarik/vundle">Vundle</a>:</p>
+
+<ol>
+<li>
+<p>Add the following line to the Vundle section in your <code>.vimrc</code>:</p>
+
+<p><code>Bundle 'mbadran/headlights'</code></p>
+</li>
+<li>
+<p>Run the following Vim command:</p>
+
+<p><code>BundleInstall</code></p>
+</li>
+</ol><h4>The Manual Way</h4>
+
+<ol>
+<li><p><a href="https://github.com/mbadran/headlights/downloads">Download the latest package</a>.</p></li>
+<li><p>Expand the archive's contents into your <code>vim</code> directory.</p></li>
+<li>
+<p>Run the following Vim command:</p>
+
+<p><code>helptags &lt;vim_dir&gt;/&lt;plugin_dir&gt;/&lt;headlights_dir&gt;/doc/</code></p>
+</li>
+</ol><h2>Explore the Options</h2>
+
+<p><code>let g:headlights_use_plugin_menu = 0</code> (Disabled)</p>
+
+<p><code>let g:headlights_smart_menus = 1</code> (Enabled)</p>
+
+<p><code>let g:headlights_show_commands = 1</code> (Enabled)</p>
+
+<p><code>let g:headlights_show_mappings = 1</code> (Enabled)</p>
+
+<p><code>let g:headlights_show_abbreviations = 0</code> (Disabled)</p>
+
+<p><code>let g:headlights_show_functions = 0</code> (Disabled)</p>
+
+<p><code>let g:headlights_show_highlights = 0</code> (Disabled)</p>
+
+<p><code>let g:headlights_show_files = 0</code> (Disabled)</p>
+
+<p><code>let g:headlights_show_load_order = 0</code> (Disabled)</p>
+
+<p><code>let g:headlights_debug_mode = 0</code> (Disabled)</p>
+
+<h2>Go Deeper</h2>
+
+<p>Refer to the Headlights help document:</p>
+
+<p><code>Bundles &gt; a - i &gt; headlights &gt; Help</code></p>
+
+<p><code>:help headlights</code></p>
+
+<h4>Protip</h4>
+
+<p>If you use MacVim, you can quickly access any plugin by typing its name. For
+example, hit <code>CMD-?</code> to bring up a search dialog for menu items, then type <code>fug
+open</code> to reveal the <code>fugitive.vim</code> file as the first result. You can also type
+<code>fug help</code> to quickly access the documentation. I do this, like, <em>all the time</em>.</p>
+
+<hr><p>[^1]: Headlights is inspired by TextMate's Bundles menu.</p>
+
+<p>[^2]: Headlights mirrors Vim's <code>scriptnames</code> command, revealing only the
+      bundles that are currently loaded. This is fast because it avoids file
+      system access, but the trade off is that autoload and ftplugin scripts
+      are not revealed until they are needed. (This is Good Enough ™.)</p>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
