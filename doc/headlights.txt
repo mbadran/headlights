@@ -176,6 +176,11 @@ hosted at Vim.org:
 ==============================================================================
 CHANGELOG                                               *headlights-changelog*
 
+1.5.1
+    - exclude autoload functions from view
+    - reset the buffer menu when the filetype changes
+    - minor code and usability improvements
+
 1.5
     - refactoring
     - huge performance boost (wait for cursorhold)
