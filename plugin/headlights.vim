@@ -1,12 +1,12 @@
 " Headlights - Know thy Bundles.
 " Version: 1.5.1
-" Home: <www.vim.org/scripts/script.php?script_id=3455>
-" Development:	<github.com/mbadran/headlights>
-" Maintainer:	Mohammed Badran <mebadran _AT_ gmail>
+" Home: www.vim.org/scripts/script.php?script_id=3455
+" Development: github.com/mbadran/headlights
+" Maintainer: Mohammed Badran <mebadran _AT_ gmail>
 
 " boilerplate {{{1
 
-if exists('g:loaded_headlights') || &cp
+if exists("g:loaded_headlights") || &cp
   finish
 endif
 
@@ -17,8 +17,8 @@ catch /E319/    " no python
   let s:invalid_python = 1
 endtry
 
-if v:version < 700 || exists('s:invalid_python')
-  echomsg 'Headlights requires Vim 7+ compiled with Python 2.6+ support.'
+if v:version < 700 || exists("s:invalid_python")
+  echomsg("Headlights requires Vim 7+ compiled with Python 2.6+ support.")
   finish
 endif
 
@@ -30,20 +30,20 @@ set cpo&vim
 " configuration {{{1
 
 " only enable commands, mappings, and smart menus by default
-let s:use_plugin_menu = exists('g:headlights_use_plugin_menu')? g:headlights_use_plugin_menu : 0
-let s:show_files = exists('g:headlights_show_files')? g:headlights_show_files : 0
-let s:show_commands = exists('g:headlights_show_commands')? g:headlights_show_commands : 1
-let s:show_mappings = exists('g:headlights_show_mappings')? g:headlights_show_mappings : 1
-let s:show_abbreviations = exists('g:headlights_show_abbreviations')? g:headlights_show_abbreviations : 0
-let s:show_functions = exists('g:headlights_show_functions')? g:headlights_show_functions : 0
-let s:show_highlights = exists('g:headlights_show_highlights')? g:headlights_show_highlights : 0
-let s:show_load_order = exists('g:headlights_show_load_order')? g:headlights_show_load_order : 0
-let s:smart_menus = exists('g:headlights_smart_menus')? g:headlights_smart_menus : 1
-let s:debug_mode = exists('g:headlights_debug_mode')? g:headlights_debug_mode : 0
+let s:use_plugin_menu = exists("g:headlights_use_plugin_menu")? g:headlights_use_plugin_menu : 0
+let s:show_files = exists("g:headlights_show_files")? g:headlights_show_files : 0
+let s:show_commands = exists("g:headlights_show_commands")? g:headlights_show_commands : 1
+let s:show_mappings = exists("g:headlights_show_mappings")? g:headlights_show_mappings : 1
+let s:show_abbreviations = exists("g:headlights_show_abbreviations")? g:headlights_show_abbreviations : 0
+let s:show_functions = exists("g:headlights_show_functions")? g:headlights_show_functions : 0
+let s:show_highlights = exists("g:headlights_show_highlights")? g:headlights_show_highlights : 0
+let s:show_load_order = exists("g:headlights_show_load_order")? g:headlights_show_load_order : 0
+let s:smart_menus = exists("g:headlights_smart_menus")? g:headlights_smart_menus : 1
+let s:debug_mode = exists("g:headlights_debug_mode")? g:headlights_debug_mode : 0
 
-let s:menu_root = s:use_plugin_menu? 'Plugin.headlights' : 'Bundles'
+let s:menu_root = s:use_plugin_menu? "Plugin.headlights" : "Bundles"
 
-let s:scriptdir = expand("<sfile>:h") . '/'
+let s:scriptdir = expand("<sfile>:h") . "/"
 
 " pyargs {{{1
 
@@ -53,7 +53,13 @@ python << endpython
 
 import time, os, re
 
-# initialise python globals as script args
+# initialise global configuration vars
+
+MENU_ROOT = vim.eval("s:menu_root")
+SHOW_FILES = bool(int(vim.eval("s:show_files")))
+SHOW_LOAD_ORDER = bool(int(vim.eval("s:show_load_order")))
+SMART_MENUS = bool(int(vim.eval("s:smart_menus")))
+DEBUG_MODE = bool(int(vim.eval("s:debug_mode")))
 
 MODE_MAP = {
     " ": "Normal, Visual, Select, Operator-pending",
@@ -169,48 +175,7 @@ VIM_DIR_PATTERNS = [
     #re.compile(r".+/tools$", re.IGNORECASE),
     #re.compile(r".+/tutor$", re.IGNORECASE)]
 
-sys.argv = [vim.eval("s:menu_root"),
-    bool(int(vim.eval("s:show_files"))),
-    bool(int(vim.eval("s:show_load_order"))),
-    bool(int(vim.eval("s:smart_menus"))),
-    bool(int(vim.eval("s:debug_mode"))),
-    MODE_MAP,
-    SOURCE_LINE,
-    MENU_TRUNC_LIMIT,
-    MENU_SPILLOVER_PATTERNS,
-    COMMAND_PATTERN,
-    MAPPING_PATTERN,
-    ABBREV_PATTERN,
-    HIGHLIGHT_PATTERN,
-    SCRIPTNAME_PATTERN,
-    VIM_DIR_PATTERNS]
-
 endpython
-
-function! s:GetVimCommandOutput(command) " {{{1
-  " capture and return the output of a vim command
-
-  " initialise to a blank value in case the command throws a vim error
-  " (try-catch doesn't always work here, for some reason)
-  let l:output = ''
-
-  redir => l:output
-    execute "silent verbose " . a:command
-  redir END
-
-  return l:output
-endfunction
-
-function! s:InitBundleData() " {{{1
-  " prepares the raw bundle data to be transformed into vim menus
-
-  let s:scriptnames = s:GetVimCommandOutput('scriptnames')
-  let s:commands = s:show_commands? s:GetVimCommandOutput('command') : ''
-	let s:mappings = s:show_mappings? s:GetVimCommandOutput('map') . s:GetVimCommandOutput('map!') : ''
-	let s:abbreviations = s:show_abbreviations? s:GetVimCommandOutput('abbreviate') : ''
-	let s:functions = s:show_functions? s:GetVimCommandOutput('function') : ''
-	let s:highlights = s:show_highlights? s:GetVimCommandOutput('highlight') : ''
-endfunction
 
 function! s:RequestVimMenus() " {{{1
   " requests the bundle menus from the helper python script
@@ -244,6 +209,31 @@ endpython
   endif
 endfunction
 
+function! s:InitBundleData() " {{{1
+  " prepares the raw bundle data to be transformed into vim menus
+
+  let s:scriptnames = s:GetVimCommandOutput("scriptnames")
+  let s:commands = s:show_commands? s:GetVimCommandOutput("command") : ""
+  let s:mappings = s:show_mappings? s:GetVimCommandOutput('map') . s:GetVimCommandOutput('map!') : ""
+  let s:abbreviations = s:show_abbreviations? s:GetVimCommandOutput("abbreviate") : ""
+  let s:functions = s:show_functions? s:GetVimCommandOutput("function") : ""
+  let s:highlights = s:show_highlights? s:GetVimCommandOutput("highlight") : ""
+endfunction
+
+function! s:GetVimCommandOutput(command) " {{{1
+  " capture and return the output of a vim command
+
+  " initialise to a blank value in case the command throws a vim error
+  " (try-catch doesn't always work here, for some reason)
+  let l:output = ''
+
+  redir => l:output
+    execute "silent verbose " . a:command
+  redir END
+
+  return l:output
+endfunction
+
 function! s:ResetBufferState() " {{{1
   " remove the local buffer's menu and reset its state
 
@@ -262,7 +252,9 @@ endfunction
 augroup headlights
   autocmd!
   autocmd GUIEnter,CursorHold * call s:RequestVimMenus()
+  " reset buffer menus when leaving, and when the filetype changes
   autocmd BufLeave * call s:ResetBufferState()
+  autocmd FileType * if exists("b:headlights_buffer_updated")|call s:ResetBufferState()|endif
 augroup END
 
 " boilerplate {{{1
