@@ -1,103 +1,109 @@
 # encoding: utf-8
 
 # Python helper for headlights.vim
-# Version: 1.5.1
+# Version: 1.5.2
 
 # context vars (global)
-bundles = {}
-menus = []
-errors = []
-start_time = 0
+hl_bundles = {}
+hl_menus = []
+hl_errors = []
+hl_start_time = 0
 
 # data vars (global)
-vim_execution_time = 0
-scriptnames = ""
-categories = []
+hl_vim_execution_time = 0
+hl_scriptnames = ""
+hl_categories = []
 
 def run_headlights(vim_time, vim_scriptnames, **vim_categories):
     """Initialise the default settings and control the execution."""
 
-    global start_time, vim_execution_time, scriptnames, categories
+    global hl_start_time, hl_vim_execution_time, hl_scriptnames, hl_categories, HL_ERROR_MSG
 
-    start_time = time.time()
-    vim_execution_time = vim_time
-    scriptnames = vim_scriptnames
-    categories = vim_categories
+    hl_start_time = time.time()
+    hl_vim_execution_time = vim_time
+    hl_scriptnames = vim_scriptnames
+    hl_categories = vim_categories
 
-    # for quick profiling, reverse comments
-    attach_menus()
-    # import cProfile
-    # DEBUG_MODE = False
-    # cProfile.runctx("attach_menus()", globals(), locals())
+    try:
+        attach_menus()
+
+    # log unexpected errors to file
+    except:
+        import traceback
+        hl_errors.insert(0, traceback.format_exc())
+        # generate the debug log
+        log_name = do_debug()
+        sys.stdout.write("%s" % traceback.format_exc())
+        sys.stdout.write("Headlights error. See the debug log for details: %s" % log_name)
 
 def attach_menus():
     """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
 
-    root = MENU_ROOT
-    sep = os.linesep
+    global HL_ERROR_MSG
 
-    DEBUG_MSG = "See the '%(root)s > debug' menu for details.%(sep)s" % locals()
-    ERROR_MSG = "Headlights encountered a critical error. %(DEBUG_MSG)s" % locals()
+    root = HL_MENU_ROOT
+    new_line = os.linesep
 
-    if not DEBUG_MODE:
-        DEBUG_MSG = "To enable debug mode, see :help headlights_debug_mode%(sep)s" % locals()
+    parse_scriptnames()
 
-    WARNING_MSG = "Warning: Headlights failed to execute menu command. %(DEBUG_MSG)s" % locals()
+    # parse the menu categories with the similarly named functions
+    for key in iter(list(hl_categories.keys())):
+        if hl_categories[key]:
+            function = globals()["parse_" + key]
+            function(hl_categories[key].strip().split("\n"))
 
-    try:
-        parse_scriptnames()
+    # generate the menu commands
+    for path, properties in iter(list(hl_bundles.items())):
+        name = properties["name"]
 
-        # parse the menu categories with the similarly named functions
-        for key in iter(list(categories.keys())):
-            if categories[key]:
-                function = globals()["parse_" + key]
-                function(categories[key].strip().split("\n"))
+        name = sanitise_menu(name)
 
-        for path, properties in iter(list(bundles.items())):
-            name = properties["name"]
+        prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
+        prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
 
-            spillover = sanitise_menu(get_spillover(name, path))
+        gen_menus(name, prefix, path, properties)
 
-            name = sanitise_menu(name)
-
-            prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
-
+        # duplicate local buffer menus for convenience
+        if hl_bundles[path]["buffer"]:
+            prefix = "%(root)s.⁣⁣buffer.%(name)s." % locals()
             gen_menus(name, prefix, path, properties)
 
-            # duplicate local buffer menus for convenience
-            if bundles[path]["buffer"]:
-                prefix = "%(root)s.⁣⁣buffer.%(name)s." % locals()
-                gen_menus(name, prefix, path, properties)
+    hl_menus.sort(key=lambda menu: menu.lower())
 
-    # recover (somewhat) gracefully
-    except Exception:
-        import traceback
-        errors.insert(0, traceback.format_exc())
-        sys.stdout.write(ERROR_MSG)
+    if HL_DEBUG_MODE:
+        # do the debug log and menus
         do_debug()
 
-    finally:
-        if DEBUG_MODE:
-            do_debug()
+        # attach the vim menus, skipping any bad vim menu commands
+        for menu_command in hl_menus:
+            try:
+                vim.command("%(menu_command)s" % locals())
+            except vim.error:
+                menu_error = "Couldn't run Vim menu command: '%(menu_command)s'" % locals()
+                hl_errors.insert(0, menu_error)
+                # redo the debug log and menus
+                log_name = do_debug()
+                sys.stdout.write("%(menu_error)s%(new_line)s" % locals())
+                sys.stdout.write(HL_MENU_ERROR)
+                continue
 
-    menus.sort(key=lambda menu: menu.lower())
-
-    # attach the vim menus
-    [vim.command("%(menu_command)s" % locals()) for menu_command in menus]
-    # import cProfile
-    # DEBUG_MODE = False
-    # cProfile.runctx("[vim.command('%(menu_command)s' % locals()) for menu_command in menus]", globals(), locals())
+    # just attach the vim menus (faster)
+    else:
+        try:
+            [vim.command("%(menu_command)s" % locals()) for menu_command in hl_menus]
+        except vim.error:
+            sys.stdout.write(HL_MENU_ERROR)
 
 def parse_scriptnames():
     """Extract the bundles (aka scriptnames/plugins)."""
 
-    global scriptnames
+    global hl_scriptnames
 
-    scriptnames = scriptnames.strip().split("\n")
+    hl_scriptnames = hl_scriptnames.strip().split("\n")
 
-    for line in scriptnames:
+    for line in hl_scriptnames:
         # strip leading indexes
-        matches = SCRIPTNAME_PATTERN.match(line)
+        matches = HL_SCRIPTNAME_PATTERN.match(line)
 
         order = matches.group("order")
         path = matches.group("path")
@@ -113,10 +119,10 @@ def init_bundle(path, order):
     # use the file dir as the default bundle root
     root = os.path.dirname(path)
 
-    if SMART_MENUS:
+    if HL_SMART_MENUS:
         # find the actual bundle root (ignoring runtime bundles). break out of standard vim dirs, if necessary.
         if "/runtime/" not in root.lower():
-            for pattern in VIM_DIR_PATTERNS:
+            for pattern in HL_VIM_DIR_PATTERNS:
                 if re.match(pattern, root):
                     parent = re.sub("/\w+$", "", root)
                     # make sure we're not in a nested dir (eg. autoload, ftplugin, after)
@@ -135,10 +141,10 @@ def init_bundle(path, order):
         # now that we (probably) know the root, check previous bundles for a matching root
         # ignore vimrc files and bundles in the runtime dir
         if "/runtime/" not in path and not name.endswith("vimrc"):
-            for key in iter(list(bundles.keys())):
-                if root == bundles[key]["root"]:
+            for key in iter(list(hl_bundles.keys())):
+                if root == hl_bundles[key]["root"]:
                     # if we have a match, group the bundles together by the previous name
-                    name = bundles[key]["name"]
+                    name = hl_bundles[key]["name"]
                     break
 
     # remove the 'vim-' prefix from bundle names (a source control project thing)
@@ -149,7 +155,7 @@ def init_bundle(path, order):
     if name.endswith("_vim"):
         name = name[:-4]
 
-    bundles[path] = {
+    hl_bundles[path] = {
         "order": order,
         "name": name,
         "root": root,
@@ -161,7 +167,7 @@ def init_bundle(path, order):
         "buffer": False
     }
 
-    return bundles[path]
+    return hl_bundles[path]
 
 def parse_commands(commands):
     """Extract the commands."""
@@ -171,13 +177,13 @@ def parse_commands(commands):
 
     for i, line in enumerate(commands):
         # begin with command lines
-        if SOURCE_LINE not in line:
-            matches = COMMAND_PATTERN.match(line)
+        if HL_SOURCE_LINE not in line:
+            matches = HL_COMMAND_PATTERN.match(line)
 
             try:
                 command = matches.group("name")
             except AttributeError:
-                errors.append("parse_commands: no command name found in command '%(line)s'" % locals())
+                hl_errors.append("parse_commands: no command name found in command '%(line)s'" % locals())
                 continue
 
             definition = matches.group("definition")
@@ -198,10 +204,10 @@ def parse_commands(commands):
                 source_script["commands"].append([command, definition])
 
             except IndexError:
-                errors.append("parse_command: source line not found for command '%(line)s'" % locals())
+                hl_errors.append("parse_command: source line not found for command '%(line)s'" % locals())
                 continue
             except TypeError:
-                errors.append("parse_command: source script not initialised for command '%(line)s'" % locals())
+                hl_errors.append("parse_command: source script not initialised for command '%(line)s'" % locals())
                 continue
 
 def parse_modes(mode):
@@ -215,7 +221,7 @@ def parse_modes(mode):
     modes = list(mode)
 
     # translate to mode descriptions
-    modes = [MODE_MAP.get(mode) for mode in modes]
+    modes = [HL_MODE_MAP.get(mode) for mode in modes]
 
     return modes
 
@@ -224,19 +230,19 @@ def parse_mappings(mappings):
 
     for i, line in enumerate(mappings):
         # begin with mapping lines
-        if SOURCE_LINE not in line:
-            matches = MAPPING_PATTERN.match(line)
+        if HL_SOURCE_LINE not in line:
+            matches = HL_MAPPING_PATTERN.match(line)
 
             try:
                 lhs = matches.group("lhs")
             except AttributeError:
-                errors.append("parse_mappings: lhs not found for mapping '%(line)s'" % locals())
+                hl_errors.append("parse_mappings: lhs not found for mapping '%(line)s'" % locals())
                 continue
 
             try:
                 rhs = matches.group("rhs").strip()
             except AttributeError:
-                errors.append("parse_mappings: rhs not found for mapping '%(line)s'" % locals())
+                hl_errors.append("parse_mappings: rhs not found for mapping '%(line)s'" % locals())
                 continue
 
             modes = parse_modes(matches.group("modes"))
@@ -254,10 +260,10 @@ def parse_mappings(mappings):
                     source_script["mappings"].append([mode, lhs, rhs])
 
             except IndexError:
-                errors.append("parse_mappings: source line not found for mapping '%(line)s'" % locals())
+                hl_errors.append("parse_mappings: source line not found for mapping '%(line)s'" % locals())
                 continue
             except TypeError:
-                errors.append("parse_mappings: source script not initialised for mapping '%(line)s'" % locals())
+                hl_errors.append("parse_mappings: source script not initialised for mapping '%(line)s'" % locals())
                 continue
 
 def parse_abbreviations(abbreviations):
@@ -265,19 +271,19 @@ def parse_abbreviations(abbreviations):
 
     for i, line in enumerate(abbreviations):
         # begin with abbreviation lines
-        if SOURCE_LINE not in line:
-            matches = ABBREV_PATTERN.match(line)
+        if HL_SOURCE_LINE not in line:
+            matches = HL_ABBREV_PATTERN.match(line)
 
             try:
                 lhs = matches.group("lhs")
             except AttributeError:
-                errors.append("parse_abbreviations: lhs not found for abbreviation '%(line)s'" % locals())
+                hl_errors.append("parse_abbreviations: lhs not found for abbreviation '%(line)s'" % locals())
                 continue
 
             try:
                 rhs = matches.group("rhs").strip()
             except AttributeError:
-                errors.append("parse_abbreviations: rhs not found for abbreviation '%(line)s'" % locals())
+                hl_errors.append("parse_abbreviations: rhs not found for abbreviation '%(line)s'" % locals())
                 continue
 
             modes = parse_modes(matches.group("modes"))
@@ -295,10 +301,10 @@ def parse_abbreviations(abbreviations):
                     source_script["abbreviations"].append([mode, lhs, rhs])
 
             except IndexError:
-                errors.append("parse_abbreviations: source line not found for abbreviation '%(line)s'" % locals())
+                hl_errors.append("parse_abbreviations: source line not found for abbreviation '%(line)s'" % locals())
                 continue
             except TypeError:
-                errors.append("parse_mappings: source script not initialised for abbreviation '%(line)s'" % locals())
+                hl_errors.append("parse_mappings: source script not initialised for abbreviation '%(line)s'" % locals())
                 continue
 
 def parse_functions(functions):
@@ -306,7 +312,7 @@ def parse_functions(functions):
 
     for i, line in enumerate(functions):
         # begin with function lines
-        if SOURCE_LINE not in line:
+        if HL_SOURCE_LINE not in line:
             function = line.split("function ")[1]
 
             # get the source script from the next list item
@@ -321,8 +327,8 @@ def parse_highlights(highlights):
 
     for i, line in enumerate(highlights):
         # begin with highlight lines
-        if SOURCE_LINE not in line:
-            matches = HIGHLIGHT_PATTERN.match(line)
+        if HL_SOURCE_LINE not in line:
+            matches = HL_HIGHLIGHT_PATTERN.match(line)
 
             try:
                 group = matches.group("group")
@@ -354,9 +360,9 @@ def parse_highlights(highlights):
 def get_source_script(line):
     """Extract the source script from the line and return the bundle."""
 
-    script_path = line.replace(SOURCE_LINE, "").strip()
+    script_path = line.replace(HL_SOURCE_LINE, "").strip()
 
-    return bundles.get(expand_home(script_path))
+    return hl_bundles.get(expand_home(script_path))
 
 def expand_home(path):
     """Return the absolute home path for forward compatibility with later vim versions."""
@@ -376,12 +382,12 @@ def get_spillover(name, path):
 
     # use empty chars (looks like space) to move menus to the bottom
     # and exclude vimrc files from buffer local menus (for simplicity)
-    if bundles[path]["name"].endswith("vimrc"):
+    if hl_bundles[path]["name"].endswith("vimrc"):
         spillover = "⁣vimrc"
     elif "/runtime/" in path.lower():
         spillover = "⁣runtime"
     else:
-        for pattern, category in list(MENU_SPILLOVER_PATTERNS.items()):
+        for pattern, category in list(HL_MENU_SPILLOVER_PATTERNS.items()):
             if pattern.match(name):
                 spillover = category
                 break
@@ -394,7 +400,7 @@ def gen_menus(name, prefix, path, properties):
     # this needs to be first so sort() can get the script order right
     gen_help_menu(name, prefix)
 
-    if SHOW_FILES:
+    if HL_SHOW_FILES:
         gen_files_menu(path, prefix, properties["order"])
 
     if len(properties["commands"]) > 0:
@@ -419,10 +425,10 @@ def gen_help_menu(name, prefix):
     sep_priority = "9997.110"
 
     help_item = "amenu <silent> %(help_priority)s %(prefix)sHelp :help %(name)s<CR>" % locals()
-    menus.append(help_item)
+    hl_menus.append(help_item)
 
     sep_item = "amenu <silent> %(sep_priority)s %(prefix)s-Sep1- :" % locals()
-    menus.append(sep_item)
+    hl_menus.append(sep_item)
 
 def gen_files_menu(path, prefix, load_order):
     """Add file menus."""
@@ -436,32 +442,32 @@ def gen_files_menu(path, prefix, load_order):
     file_path_cmd = file_path.replace("\\.", ".")
     file_dir_path_cmd = file_dir_path.replace("\\.", ".")
 
-    if len(file_path) > MENU_TRUNC_LIMIT:
-        trunc_file_path = "<" + sanitise_menu(path[-MENU_TRUNC_LIMIT:])
+    if len(file_path) > HL_MENU_TRUNC_LIMIT:
+        trunc_file_path = "<" + sanitise_menu(path[-HL_MENU_TRUNC_LIMIT:])
 
     if sys.platform == "darwin":
         reveal_cmd = "silent !open"
 
     open_item = "amenu <silent> %(item_priority)s.10 %(prefix)sFiles.%(trunc_file_path)s.Open\ File<Tab>%(file_path)s :tabnew %(file_path_cmd)s<CR>" % locals()
-    menus.append(open_item)
+    hl_menus.append(open_item)
 
     explore_item = "amenu <silent> %(item_priority)s.20 %(prefix)sFiles.%(trunc_file_path)s.Explore\ in\ Vim<Tab>%(file_dir_path)s :Texplore %(file_dir_path_cmd)s<CR>" % locals()
-    menus.append(explore_item)
+    hl_menus.append(explore_item)
 
     try:
         reveal_item = "amenu <silent> %(item_priority)s.30 %(prefix)sFiles.%(trunc_file_path)s.Explore\ in\ System<Tab>%(file_dir_path)s :%(reveal_cmd)s %(file_dir_path_cmd)s<CR>" % locals()
-        menus.append(reveal_item)
+        hl_menus.append(reveal_item)
     except KeyError:
         pass    # no reveal item for this platform
 
-    if SHOW_LOAD_ORDER:
+    if HL_SHOW_LOAD_ORDER:
         sep_item = "amenu <silent> %(item_priority)s.40 %(prefix)sFiles.%(trunc_file_path)s.-Sep1- :" % locals()
-        menus.append(sep_item)
+        hl_menus.append(sep_item)
 
         order_item = "amenu <silent> %(item_priority)s.50 %(prefix)sFiles.%(trunc_file_path)s.Order:\ %(load_order)s :" % locals()
-        menus.append(order_item)
+        hl_menus.append(order_item)
         disabled_item = "amenu <silent> disable %(prefix)sFiles.%(trunc_file_path)s.Order:\ %(load_order)s" % locals()
-        menus.append(disabled_item)
+        hl_menus.append(disabled_item)
 
 def gen_commands_menu(commands, prefix):
     """Add command menus."""
@@ -473,7 +479,7 @@ def gen_commands_menu(commands, prefix):
         definition = sanitise_menu(command[1])
 
         command_item = "amenu <silent> %(item_priority)s %(prefix)sCommands.%(name)s :%(name)s<CR>" % locals()
-        menus.append(command_item)
+        hl_menus.append(command_item)
 
 def gen_mappings_menu(mappings, prefix):
     """Add mapping menus."""
@@ -486,9 +492,9 @@ def gen_mappings_menu(mappings, prefix):
         rhs = sanitise_menu(rhs)
 
         mapping_item = "amenu <silent> %(item_priority)s %(prefix)sMappings.%(mode)s.%(lhs)s<Tab>%(rhs)s :" % locals()
-        menus.append(mapping_item)
+        hl_menus.append(mapping_item)
         disabled_item = "amenu <silent> disable %(prefix)sMappings.%(mode)s.%(lhs)s" % locals()
-        menus.append(disabled_item)
+        hl_menus.append(disabled_item)
 
 def gen_abbreviations_menu(abbreviations, prefix):
     """Add abbreviation menus."""
@@ -500,14 +506,14 @@ def gen_abbreviations_menu(abbreviations, prefix):
         lhs = trunc_lhs = sanitise_menu(lhs)
         rhs = sanitise_menu(rhs)
 
-        if len(lhs) > MENU_TRUNC_LIMIT:
-            trunc_lhs = lhs[:MENU_TRUNC_LIMIT] + ">"
+        if len(lhs) > HL_MENU_TRUNC_LIMIT:
+            trunc_lhs = lhs[:HL_MENU_TRUNC_LIMIT] + ">"
 
         # prefix mode with an invisible char so vim can create mode menus separate from mappings'
         abbr_item = "amenu <silent> %(item_priority)s %(prefix)s⁣Abbreviations.%(mode)s.%(trunc_lhs)s<Tab>%(rhs)s :" % locals()
-        menus.append(abbr_item)
+        hl_menus.append(abbr_item)
         disabled_item = "amenu <silent> disable %(prefix)s⁣Abbreviations.%(mode)s.%(trunc_lhs)s" % locals()
-        menus.append(disabled_item)
+        hl_menus.append(disabled_item)
 
 def gen_functions_menu(functions, prefix):
     """Add function menus."""
@@ -519,14 +525,14 @@ def gen_functions_menu(functions, prefix):
         function_label = ""
 
         # only show a label if the function name is truncated
-        if len(function) > MENU_TRUNC_LIMIT:
+        if len(function) > HL_MENU_TRUNC_LIMIT:
             function_label = trunc_function
-            trunc_function = trunc_function[:MENU_TRUNC_LIMIT] + ">"
+            trunc_function = trunc_function[:HL_MENU_TRUNC_LIMIT] + ">"
 
         function_item = "amenu <silent> %(item_priority)s %(prefix)sFunctions.%(trunc_function)s<Tab>%(function_label)s :" % locals()
-        menus.append(function_item)
+        hl_menus.append(function_item)
         disabled_item = "amenu <silent> disable %(prefix)sFunctions.%(trunc_function)s" % locals()
-        menus.append(disabled_item)
+        hl_menus.append(disabled_item)
 
 def gen_highlights_menu(highlights, prefix):
     """Add highlight menus."""
@@ -542,7 +548,7 @@ def gen_highlights_menu(highlights, prefix):
             for attribute in attribute_list:
                 attribute = sanitise_menu(attribute)
                 highlight_item = "amenu <silent> %(item_priority)s %(prefix)sHighlights.%(group)s.%(terminal)s.%(attribute)s<Tab>Copy\ to\ clipboard :let @* = '%(attribute)s'<CR>" % locals()
-                menus.append(highlight_item)
+                hl_menus.append(highlight_item)
 
 def gen_debug_menu(log_name):
     """Add debug menus."""
@@ -555,23 +561,23 @@ def gen_debug_menu(log_name):
     log_name_label = sanitise_menu(log_name)
     log_dir = os.path.dirname(log_name)
 
-    root = MENU_ROOT
+    root = HL_MENU_ROOT
 
     sep_item = "amenu <silent> %(sep_priority)s %(root)s.-SepHLD- :" % locals()
-    menus.append(sep_item)
+    hl_menus.append(sep_item)
 
     if sys.platform == "darwin":
         reveal_log_cmd = "!open"
 
     open_item = "amenu <silent> %(open_priority)s %(root)s.debug.Open\ Log<Tab>%(log_name_label)s :tabnew %(log_name)s<CR>" % locals()
-    menus.append(open_item)
+    hl_menus.append(open_item)
 
     explore_item = "amenu <silent> %(texplore_priority)s %(root)s.debug.Explore\ in\ Vim<Tab>%(log_dir)s :Texplore %(log_dir)s<CR>" % locals()
-    menus.append(explore_item)
+    hl_menus.append(explore_item)
 
     try:
         reveal_item = "amenu <silent> %(explore_priority)s %(root)s.debug.Explore\ in\ System<Tab>%(log_dir)s :%(reveal_log_cmd)s %(log_dir)s<CR>" % locals()
-        menus.append(reveal_item)
+        hl_menus.append(reveal_item)
     except KeyError:
         pass    # no reveal item for this platform
 
@@ -581,21 +587,18 @@ def do_debug():
     import tempfile
     import platform
 
-    LOGNAME_PREFIX = "headlights_"
-    LOGNAME_SUFFIX = ".log"
-
-    log_file = tempfile.NamedTemporaryFile(prefix=LOGNAME_PREFIX, suffix=LOGNAME_SUFFIX, delete=False)
+    log_file = tempfile.NamedTemporaryFile(prefix=HL_LOGNAME_PREFIX, suffix=HL_LOGNAME_SUFFIX, delete=False)
 
     gen_debug_menu(log_file.name)
 
     date = time.ctime()
     platform = platform.platform()
-    errors_ = "\n".join(errors)
-    scriptnames_ = "\n".join(scriptnames)
-    categories_ = "\n\n".join("%s:%s" % (key.upper(), categories[key]) for key in iter(list(categories.keys())))
-    menus_ = "\n".join(menus)
-    vim_time = vim_execution_time
-    python_time = time.time() - start_time
+    errors = "\n".join(hl_errors)
+    scriptnames = "\n".join(hl_scriptnames)
+    categories = "\n\n".join("%s:%s" % (key.upper(), hl_categories[key]) for key in iter(list(hl_categories.keys())))
+    menus = "\n".join(hl_menus)
+    vim_time = hl_vim_execution_time
+    python_time = time.time() - hl_start_time
 
     log_file.write("""Headlights -- Vim Debug Log
 
@@ -604,21 +607,25 @@ PLATFORM: %(platform)s
 
 This is the debug log for Headlights <https://github.com/mbadran/headlights/>
 For details on how to raise a GitHub issue, see :help headlights-issues
-Don't forget to disable debug mode when you're done!
+Don't forget to disable debug mode if you've specifically enabled it.
 
 ERRORS:
-%(errors_)s
+%(errors)s
 
 SCRIPTNAMES:
-%(scriptnames_)s
+%(scriptnames)s
 
-%(categories_)s
+%(categories)s
 
 MENUS:
-%(menus_)s
+%(menus)s
 
 Headlights vim code executed in %(vim_time).2f seconds
 Headlights python code executed in %(python_time).2f seconds
+
+(Vim menu commands not timed.)
 """ % locals())
 
     log_file.close()
+
+    return log_file.name
