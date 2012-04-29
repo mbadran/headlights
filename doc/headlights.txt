@@ -18,7 +18,7 @@ CONTENTS                                                          *headlights*
     5. Tips ________________________________________________ |headlights-tips|
     6. About ______________________________________________ |headlights-about|
     7. Changelog ______________________________________ |headlights-changelog|
-    8. Licence __________________________________________ |headlights-licence|
+    8. License __________________________________________ |headlights-license|
 
 ==============================================================================
 INTRODUCTION                                                *headlights-intro*
@@ -118,7 +118,7 @@ Enable debug mode and create menus to access the log file:
 
     let g:headlights_debug_mode = 1
 
-Default value: 0 (1 in the event of a Headlights exception)
+Default value: 0
 
 Note: If you manually enable this option, remember to disable it after
 troubleshooting, or log files will be generated very time you enter a buffer,
@@ -127,10 +127,17 @@ impacting performance and disk space.
 ==============================================================================
 ISSUES                                                     *headlights-issues*
 
+You can explicitly enable |headlights_debug_mode| by setting the following
+value in your vimrc:
+
+    let g:headlights_debug_mode = 1
+
 When |headlights_debug_mode| is enabled -- either because you enabled it or
-because a critical error occurred -- a 'debug' menu will appear under the
-Headlights menu. This will give you access to the Headlights debug log, which
-has all the information needed to troubleshoot any problems.
+because an error occurred -- a debug log will be created, which has all the
+information needed to troubleshoot any problems.
+
+If possible, a 'debug' menu will also be created under the root Headlights
+menu. This will give you easy access to the debug log.
 
 In the event of a problem, please raise a new project issue at:
 
@@ -175,6 +182,13 @@ hosted at Vim.org:
 
 ==============================================================================
 CHANGELOG                                               *headlights-changelog*
+
+1.5.2
+    - prevent headlights from running on GUI startup (faster)
+    - revamped error handling system
+    - changed the license
+    - doc updates
+    - minor code and usability improvements
 
 1.5.1
     - exclude autoload functions from view
@@ -235,9 +249,9 @@ CHANGELOG                                               *headlights-changelog*
     - initial release
 
 ==============================================================================
-LICENCE                                                   *headlights-licence*
+LICENSE                                                   *headlights-license*
 
-Headlights is released in the public domain.
+Released under the MIT License.
 
 ------------------------------------------------------------------------------
 
