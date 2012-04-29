@@ -1,5 +1,5 @@
 " Headlights - Know thy Bundles.
-" Version: 1.5.1
+" Version: 1.5.2
 " Home: www.vim.org/scripts/script.php?script_id=3455
 " Development: github.com/mbadran/headlights
 " Maintainer: Mohammed Badran <mebadran _AT_ gmail>
@@ -10,14 +10,12 @@ if exists("g:loaded_headlights") || &cp
   finish
 endif
 
-try
+if has("python")
   python import vim, sys
   python if (sys.version_info[0:2]) < (2, 6): vim.command("let s:invalid_python = 1")
-catch /E319/    " no python
-  let s:invalid_python = 1
-endtry
+endif
 
-if v:version < 700 || exists("s:invalid_python")
+if v:version < 700 || !has("python") || exists("s:invalid_python")
   echomsg("Headlights requires Vim 7+ compiled with Python 2.6+ support.")
   finish
 endif
@@ -55,13 +53,18 @@ import time, os, re
 
 # initialise global configuration vars
 
-MENU_ROOT = vim.eval("s:menu_root")
-SHOW_FILES = bool(int(vim.eval("s:show_files")))
-SHOW_LOAD_ORDER = bool(int(vim.eval("s:show_load_order")))
-SMART_MENUS = bool(int(vim.eval("s:smart_menus")))
-DEBUG_MODE = bool(int(vim.eval("s:debug_mode")))
+HL_MENU_ROOT = vim.eval("s:menu_root")
+HL_SHOW_FILES = bool(int(vim.eval("s:show_files")))
+HL_SHOW_LOAD_ORDER = bool(int(vim.eval("s:show_load_order")))
+HL_SMART_MENUS = bool(int(vim.eval("s:smart_menus")))
+HL_DEBUG_MODE = bool(int(vim.eval("s:debug_mode")))
 
-MODE_MAP = {
+HL_MENU_ERROR = "Headlights menu error. See the '%s > debug' menu. To enable debug mode, see :help headlights-issues" % HL_MENU_ROOT
+
+HL_LOGNAME_PREFIX = "headlights_"
+HL_LOGNAME_SUFFIX = ".log"
+
+HL_MODE_MAP = {
     " ": "Normal, Visual, Select, Operator-pending",
     "n": "Normal",
     "v": "Visual and Select",
@@ -74,18 +77,18 @@ MODE_MAP = {
     "c": "Command-line"
 }
 
-SOURCE_LINE = "Last set from"
+HL_SOURCE_LINE = "Last set from"
 
-MENU_TRUNC_LIMIT = 30
+HL_MENU_TRUNC_LIMIT = 30
 
-MENU_SPILLOVER_PATTERNS = {
+HL_MENU_SPILLOVER_PATTERNS = {
     re.compile(r"\.?_?\d", re.IGNORECASE): "0 - 9",
     re.compile(r"\.?_?[a-i]", re.IGNORECASE): "a - i",
     re.compile(r"\.?_?[j-r]", re.IGNORECASE): "j - r",
     re.compile(r"\.?_?[s-z]", re.IGNORECASE): "s - z"
 }
 
-COMMAND_PATTERN = re.compile(r'''
+HL_COMMAND_PATTERN = re.compile(r'''
     ^
     (?P<bang>!)?
     \\s*
@@ -105,7 +108,7 @@ COMMAND_PATTERN = re.compile(r'''
     $
     ''', re.VERBOSE | re.IGNORECASE)
 
-MAPPING_PATTERN = re.compile(r'''
+HL_MAPPING_PATTERN = re.compile(r'''
     ^
     (?P<modes>[nvsxo!ilc]+)?
     \\s*
@@ -119,7 +122,7 @@ MAPPING_PATTERN = re.compile(r'''
     $
     ''', re.VERBOSE | re.IGNORECASE)
 
-ABBREV_PATTERN = re.compile(r'''
+HL_ABBREV_PATTERN = re.compile(r'''
     ^
     (?P<modes>[nvsxo!ilc]+)?
     \\s*
@@ -133,7 +136,7 @@ ABBREV_PATTERN = re.compile(r'''
     $
     ''', re.VERBOSE | re.IGNORECASE)
 
-SCRIPTNAME_PATTERN = re.compile(r'''
+HL_SCRIPTNAME_PATTERN = re.compile(r'''
     ^
     \\s*
     (?P<order>\d+)
@@ -143,7 +146,7 @@ SCRIPTNAME_PATTERN = re.compile(r'''
     $
     ''', re.VERBOSE)
 
-HIGHLIGHT_PATTERN = re.compile(r'''
+HL_HIGHLIGHT_PATTERN = re.compile(r'''
     ^
     (?P<group>\w+)
     \\s+
@@ -153,7 +156,7 @@ HIGHLIGHT_PATTERN = re.compile(r'''
     $
     ''', re.VERBOSE | re.IGNORECASE)
 
-VIM_DIR_PATTERNS = [
+HL_VIM_DIR_PATTERNS = [
     re.compile(r".+/after(/.*)?$", re.IGNORECASE),
     re.compile(r".+/autoload(/.*)?$", re.IGNORECASE),
     re.compile(r".+/colors$", re.IGNORECASE),
@@ -182,7 +185,7 @@ function! s:RequestVimMenus() " {{{1
 
   if !exists("b:headlights_buffer_updated")
     " time the execution of the vim commands
-    python start_time = time.time()
+    python hl_vim_start_time = time.time()
 
     call s:InitBundleData()
 
@@ -190,18 +193,13 @@ function! s:RequestVimMenus() " {{{1
 
 python << endpython
 
-try:
-    run_headlights(vim_time = float(time.time() - start_time),
-        vim_scriptnames = vim.eval("s:scriptnames"),
-        commands = vim.eval("s:commands"),
-        mappings = vim.eval("s:mappings"),
-        abbreviations = vim.eval("s:abbreviations"),
-        functions = vim.eval("s:functions"),
-        highlights = vim.eval("s:highlights"))
-
-except Exception:
-    import traceback
-    sys.stdout.write("Headlights encountered a critical error. %s" % traceback.format_exc())
+run_headlights(vim_time = float(time.time() - hl_vim_start_time),
+    vim_scriptnames = vim.eval("s:scriptnames"),
+    commands = vim.eval("s:commands"),
+    mappings = vim.eval("s:mappings"),
+    abbreviations = vim.eval("s:abbreviations"),
+    functions = vim.eval("s:functions"),
+    highlights = vim.eval("s:highlights"))
 
 endpython
 
@@ -251,7 +249,7 @@ endfunction
 
 augroup headlights
   autocmd!
-  autocmd GUIEnter,CursorHold * call s:RequestVimMenus()
+    autocmd CursorHold * call s:RequestVimMenus()
   " reset buffer menus when leaving, and when the filetype changes
   autocmd BufLeave * call s:ResetBufferState()
   autocmd FileType * if exists("b:headlights_buffer_updated")|call s:ResetBufferState()|endif
