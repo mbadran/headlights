@@ -56,6 +56,8 @@ def attach_menus():
     for path, properties in iter(list(hl_bundles.items())):
         name = properties["name"]
 
+        spillover = sanitise_menu(get_spillover(name, path))
+
         name = sanitise_menu(name)
 
         prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
