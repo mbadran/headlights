@@ -6,7 +6,7 @@
 
 " boilerplate {{{1
 
-if exists("g:loaded_headlights") || &cp
+if exists("g:loaded_headlights") || &cp || !has("autocmd")
   finish
 endif
 
@@ -235,9 +235,7 @@ endfunction
 function! s:ResetBufferState() " {{{1
   " remove the local buffer's menu and reset its state
 
-  if exists("b:headlights_buffer_updated")
-    unlet b:headlights_buffer_updated
-  endif
+  unlet! b:headlights_buffer_updated
 
   try
     execute "aunmenu " . s:menu_root . ".⁣⁣buffer"
