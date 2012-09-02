@@ -26,7 +26,7 @@ def run_headlights(vim_time, vim_scriptnames, **vim_categories):
 
     try:
         parse_scriptnames()
-        parse_menus()
+        parse_categories()
         gen_menus()
         attach_menus()
 
@@ -38,68 +38,6 @@ def run_headlights(vim_time, vim_scriptnames, **vim_categories):
         log_name = do_debug()
         sys.stdout.write("%s" % traceback.format_exc())
         sys.stdout.write("Headlights error. See the debug log for details: %s" % log_name)
-
-def parse_menus():
-    """Parse the menu categories with the similarly named functions."""
-
-    for key in iter(list(hl_categories.keys())):
-        if hl_categories[key]:
-            function = globals()["parse_" + key]
-            function(hl_categories[key].strip().split("\n"))
-
-def gen_menus():
-    """Generate the menu commands."""
-
-    root = HL_MENU_ROOT
-
-    for path, properties in iter(list(hl_bundles.items())):
-        name = properties["name"]
-
-        spillover = get_spillover(name, path)
-
-        name = sanitise_menu(name)
-
-        prefix = "%(root)s.%(spillover)s%(name)s." % locals()
-
-        gen_menu_categories(name, prefix, path, properties)
-
-        # duplicate local buffer menus for convenience
-        if hl_bundles[path]["buffer"]:
-            prefix = "%(root)s.⁣⁣›\ buffer.%(name)s." % locals()
-            gen_menu_categories(name, prefix, path, properties)
-
-    # sort the menus in alphabetical order
-    hl_menus.sort(key=lambda menu: menu.lower())
-
-def attach_menus():
-    """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
-
-    root = HL_MENU_ROOT
-    new_line = os.linesep
-
-    if HL_DEBUG_MODE:
-        # do the debug log and menus
-        do_debug()
-
-        # attach the vim menus, skipping any bad vim menu commands
-        for menu_command in hl_menus:
-            try:
-                vim.command("%(menu_command)s" % locals())
-            except vim.error:
-                menu_error = "Couldn't run Vim menu command: '%(menu_command)s'" % locals()
-                hl_errors.insert(0, menu_error)
-                # redo the debug log and menus
-                log_name = do_debug()
-                sys.stdout.write("%(menu_error)s%(new_line)s" % locals())
-                sys.stdout.write(HL_MENU_ERROR)
-                continue
-
-    # just attach the vim menus (faster)
-    else:
-        try:
-            [vim.command("%(menu_command)s" % locals()) for menu_command in hl_menus]
-        except vim.error:
-            sys.stdout.write(HL_MENU_ERROR)
 
 def parse_scriptnames():
     """Extract the bundles (aka scriptnames/plugins)."""
@@ -175,6 +113,68 @@ def init_bundle(path, order):
     }
 
     return hl_bundles[path]
+
+def parse_categories():
+    """Parse the menu categories with the similarly named functions."""
+
+    for key in iter(list(hl_categories.keys())):
+        if hl_categories[key]:
+            function = globals()["parse_" + key]
+            function(hl_categories[key].strip().split("\n"))
+
+def gen_menus():
+    """Generate the menu commands."""
+
+    root = HL_MENU_ROOT
+
+    for path, properties in iter(list(hl_bundles.items())):
+        name = properties["name"]
+
+        spillover = get_spillover(name, path)
+
+        name = sanitise_menu(name)
+
+        prefix = "%(root)s.%(spillover)s%(name)s." % locals()
+
+        gen_menu_categories(name, prefix, path, properties)
+
+        # duplicate local buffer menus for convenience
+        if hl_bundles[path]["buffer"]:
+            prefix = "%(root)s.⁣⁣›\ buffer.%(name)s." % locals()
+            gen_menu_categories(name, prefix, path, properties)
+
+    # sort the menus in alphabetical order
+    hl_menus.sort(key=lambda menu: menu.lower())
+
+def attach_menus():
+    """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
+
+    root = HL_MENU_ROOT
+    new_line = os.linesep
+
+    if HL_DEBUG_MODE:
+        # do the debug log and menus
+        do_debug()
+
+        # attach the vim menus, skipping any bad vim menu commands
+        for menu_command in hl_menus:
+            try:
+                vim.command("%(menu_command)s" % locals())
+            except vim.error:
+                menu_error = "Couldn't run Vim menu command: '%(menu_command)s'" % locals()
+                hl_errors.insert(0, menu_error)
+                # redo the debug log and menus
+                log_name = do_debug()
+                sys.stdout.write("%(menu_error)s%(new_line)s" % locals())
+                sys.stdout.write(HL_MENU_ERROR)
+                continue
+
+    # just attach the vim menus (faster)
+    else:
+        try:
+            [vim.command("%(menu_command)s" % locals()) for menu_command in hl_menus]
+        except vim.error:
+            sys.stdout.write(HL_MENU_ERROR)
 
 def parse_commands(commands):
     """Extract the commands."""
