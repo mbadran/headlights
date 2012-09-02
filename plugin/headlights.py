@@ -17,7 +17,7 @@ hl_categories = []
 def run_headlights(vim_time, vim_scriptnames, **vim_categories):
     """Initialise the default settings and control the execution."""
 
-    global hl_start_time, hl_vim_execution_time, hl_scriptnames, hl_categories, HL_ERROR_MSG
+    global hl_start_time, hl_vim_execution_time, hl_scriptnames, hl_categories
 
     hl_start_time = time.time()
     hl_vim_execution_time = vim_time
@@ -25,6 +25,9 @@ def run_headlights(vim_time, vim_scriptnames, **vim_categories):
     hl_categories = vim_categories
 
     try:
+        parse_scriptnames()
+        parse_menus()
+        gen_menus()
         attach_menus()
 
     # log unexpected errors to file
@@ -36,41 +39,43 @@ def run_headlights(vim_time, vim_scriptnames, **vim_categories):
         sys.stdout.write("%s" % traceback.format_exc())
         sys.stdout.write("Headlights error. See the debug log for details: %s" % log_name)
 
-def attach_menus():
-    """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
+def parse_menus():
+    """Parse the menu categories with the similarly named functions."""
 
-    global HL_ERROR_MSG
-
-    root = HL_MENU_ROOT
-    new_line = os.linesep
-
-    parse_scriptnames()
-
-    # parse the menu categories with the similarly named functions
     for key in iter(list(hl_categories.keys())):
         if hl_categories[key]:
             function = globals()["parse_" + key]
             function(hl_categories[key].strip().split("\n"))
 
-    # generate the menu commands
+def gen_menus():
+    """Generate the menu commands."""
+
+    root = HL_MENU_ROOT
+
     for path, properties in iter(list(hl_bundles.items())):
         name = properties["name"]
 
-        spillover = sanitise_menu(get_spillover(name, path))
+        spillover = get_spillover(name, path)
 
         name = sanitise_menu(name)
 
-        prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
-        prefix = "%(root)s.%(spillover)s.%(name)s." % locals()
+        prefix = "%(root)s.%(spillover)s%(name)s." % locals()
 
-        gen_menus(name, prefix, path, properties)
+        gen_menu_categories(name, prefix, path, properties)
 
         # duplicate local buffer menus for convenience
         if hl_bundles[path]["buffer"]:
-            prefix = "%(root)s.⁣⁣buffer.%(name)s." % locals()
-            gen_menus(name, prefix, path, properties)
+            prefix = "%(root)s.⁣⁣›\ buffer.%(name)s." % locals()
+            gen_menu_categories(name, prefix, path, properties)
 
+    # sort the menus in alphabetical order
     hl_menus.sort(key=lambda menu: menu.lower())
+
+def attach_menus():
+    """Coordinate the action and attach the vim menus (minimising vim sphagetti)."""
+
+    root = HL_MENU_ROOT
+    new_line = os.linesep
 
     if HL_DEBUG_MODE:
         # do the debug log and menus
@@ -377,26 +382,25 @@ def sanitise_menu(menu):
 def get_spillover(name, path):
     """Return an appropriate menu category/spillover parent."""
 
-    # a catch all, just in case
-    spillover = "⁣other"
-
     name = name.strip()
 
-    # use empty chars (looks like space) to move menus to the bottom
-    # and exclude vimrc files from buffer local menus (for simplicity)
     if hl_bundles[path]["name"].endswith("vimrc"):
-        spillover = "⁣vimrc"
+        spillover = "⁣›\ vimrc."
     elif "/runtime/" in path.lower():
-        spillover = "⁣runtime"
-    else:
+        spillover = "⁣›\ runtime."
+    elif HL_SPILLOVER:
+        # use empty chars (looks like space) to move menus to the bottom
+        # and exclude vimrc files from buffer local menus (for simplicity)
         for pattern, category in list(HL_MENU_SPILLOVER_PATTERNS.items()):
             if pattern.match(name):
-                spillover = category
+                spillover = sanitise_menu(category) + "."
                 break
+    else:
+        spillover = ""
 
     return spillover
 
-def gen_menus(name, prefix, path, properties):
+def gen_menu_categories(name, prefix, path, properties):
     """Generate menus for enabled categories."""
 
     # this needs to be first so sort() can get the script order right
@@ -423,8 +427,8 @@ def gen_menus(name, prefix, path, properties):
 def gen_help_menu(name, prefix):
     """Add help menus."""
 
-    help_priority = "9997.100"
-    sep_priority = "9997.110"
+    help_priority = "9997.100.10"
+    sep_priority = "9997.110.10"
 
     help_item = "amenu <silent> %(help_priority)s %(prefix)sHelp :help %(name)s<CR>" % locals()
     hl_menus.append(help_item)
@@ -435,7 +439,7 @@ def gen_help_menu(name, prefix):
 def gen_files_menu(path, prefix, load_order):
     """Add file menus."""
 
-    item_priority = "9997.160"
+    item_priority = "9997.170"
 
     file_path = trunc_file_path = sanitise_menu(path)
     file_dir_path = sanitise_menu(os.path.dirname(path))
@@ -539,7 +543,7 @@ def gen_functions_menu(functions, prefix):
 def gen_highlights_menu(highlights, prefix):
     """Add highlight menus."""
 
-    item_priority = "9997.150"
+    item_priority = "9997.160"
 
     for group, terminal_list in highlights:
         group = sanitise_menu(group)
