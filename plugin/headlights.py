@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Python helper for headlights.vim
-# Version: 1.5.2
+# Version: 1.5.3
 
 # context vars (global)
 hl_bundles = {}
