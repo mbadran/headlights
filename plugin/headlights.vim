@@ -1,8 +1,8 @@
 " Headlights - Know thy Bundles.
 " Version: 1.5.2
-" Home: www.vim.org/scripts/script.php?script_id=3455
-" Development: github.com/mbadran/headlights
-" Maintainer: Mohammed Badran <mebadran _AT_ gmail>
+" Home: http://mbadran.github.com/headlights/
+" Development: http://github.com/mbadran/headlights
+" Maintainer: Mohammed Badran <http://disentangled.net>
 
 " boilerplate {{{1
 
@@ -28,18 +28,19 @@ set cpo&vim
 " configuration {{{1
 
 " only enable commands, mappings, and smart menus by default
-let s:use_plugin_menu = exists("g:headlights_use_plugin_menu")? g:headlights_use_plugin_menu : 0
-let s:show_files = exists("g:headlights_show_files")? g:headlights_show_files : 0
-let s:show_commands = exists("g:headlights_show_commands")? g:headlights_show_commands : 1
-let s:show_mappings = exists("g:headlights_show_mappings")? g:headlights_show_mappings : 1
-let s:show_abbreviations = exists("g:headlights_show_abbreviations")? g:headlights_show_abbreviations : 0
-let s:show_functions = exists("g:headlights_show_functions")? g:headlights_show_functions : 0
-let s:show_highlights = exists("g:headlights_show_highlights")? g:headlights_show_highlights : 0
-let s:show_load_order = exists("g:headlights_show_load_order")? g:headlights_show_load_order : 0
-let s:smart_menus = exists("g:headlights_smart_menus")? g:headlights_smart_menus : 1
-let s:debug_mode = exists("g:headlights_debug_mode")? g:headlights_debug_mode : 0
+let s:use_plugin_menu = exists("g:headlights_use_plugin_menu") ? g:headlights_use_plugin_menu : 0
+let s:show_files = exists("g:headlights_show_files") ? g:headlights_show_files : 0
+let s:show_commands = exists("g:headlights_show_commands") ? g:headlights_show_commands : 1
+let s:show_mappings = exists("g:headlights_show_mappings") ? g:headlights_show_mappings : 1
+let s:show_abbreviations = exists("g:headlights_show_abbreviations") ? g:headlights_show_abbreviations : 0
+let s:show_functions = exists("g:headlights_show_functions") ? g:headlights_show_functions : 0
+let s:show_highlights = exists("g:headlights_show_highlights") ? g:headlights_show_highlights : 0
+let s:show_load_order = exists("g:headlights_show_load_order") ? g:headlights_show_load_order : 0
+let s:smart_menus = exists("g:headlights_smart_menus") ? g:headlights_smart_menus : 1
+let s:debug_mode = exists("g:headlights_debug_mode") ? g:headlights_debug_mode : 0
+let s:run_on_startup = exists("g:headlights_run_on_startup") ? g:headlights_run_on_startup : 0
 
-let s:menu_root = s:use_plugin_menu? "Plugin.headlights" : "Bundles"
+let s:menu_root = s:use_plugin_menu ? "Plugin.headlights" : "Bundles"
 
 let s:scriptdir = expand("<sfile>:h") . "/"
 
@@ -211,11 +212,11 @@ function! s:InitBundleData() " {{{1
   " prepares the raw bundle data to be transformed into vim menus
 
   let s:scriptnames = s:GetVimCommandOutput("scriptnames")
-  let s:commands = s:show_commands? s:GetVimCommandOutput("command") : ""
-  let s:mappings = s:show_mappings? s:GetVimCommandOutput('map') . s:GetVimCommandOutput('map!') : ""
-  let s:abbreviations = s:show_abbreviations? s:GetVimCommandOutput("abbreviate") : ""
-  let s:functions = s:show_functions? s:GetVimCommandOutput("function") : ""
-  let s:highlights = s:show_highlights? s:GetVimCommandOutput("highlight") : ""
+  let s:commands = s:show_commands ? s:GetVimCommandOutput("command") : ""
+  let s:mappings = s:show_mappings ? s:GetVimCommandOutput('map') . s:GetVimCommandOutput('map!') : ""
+  let s:abbreviations = s:show_abbreviations ? s:GetVimCommandOutput("abbreviate") : ""
+  let s:functions = s:show_functions ? s:GetVimCommandOutput("function") : ""
+  let s:highlights = s:show_highlights ? s:GetVimCommandOutput("highlight") : ""
 endfunction
 
 function! s:GetVimCommandOutput(command) " {{{1
@@ -247,10 +248,13 @@ endfunction
 
 augroup headlights
   autocmd!
+    if s:run_on_startup
+      autocmd GuiEnter * call s:RequestVimMenus()
+    endif
     autocmd CursorHold * call s:RequestVimMenus()
-  " reset buffer menus when leaving, and when the filetype changes
-  autocmd BufLeave * call s:ResetBufferState()
-  autocmd FileType * if exists("b:headlights_buffer_updated")|call s:ResetBufferState()|endif
+    " reset buffer menus when leaving, and when the filetype changes
+    autocmd BufLeave * call s:ResetBufferState()
+    autocmd FileType * if exists("b:headlights_buffer_updated")|call s:ResetBufferState()|endif
 augroup END
 
 " boilerplate {{{1
