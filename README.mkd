@@ -58,6 +58,10 @@ Using [Vundle] [3]:
 
 `let g:headlights_debug_mode = 0` (Disabled)
 
+`let g:headlights_run_on_startup = 0` (Disabled)
+
+`let g:headlights_spillover_menus = 0` (Disabled)
+
 ## Go Deeper
 
 Refer to the Headlights help document:
