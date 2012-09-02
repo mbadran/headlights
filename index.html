@@ -1,33 +1,35 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <meta charset='utf-8'>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
-
     <title>Headlights by mbadran</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </head>
-
   <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Headlights</h1>
+        <p class="header">Know Thy Bundles</p>
 
-    <header>
-      <div class="container">
-        <h1>Headlights</h1>
-        <h2>Know Thy Bundles</h2>
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/mbadran/headlights/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/mbadran/headlights/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/mbadran/headlights">View On GitHub</a></li>
+        </ul>
 
-        <section id="downloads">
-          <a href="https://github.com/mbadran/headlights/zipball/master" class="btn">Download as .zip</a>
-          <a href="https://github.com/mbadran/headlights/tarball/master" class="btn">Download as .tar.gz</a>
-          <a href="https://github.com/mbadran/headlights" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
-        </section>
-      </div>
-    </header>
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/mbadran">mbadran</a></p>
 
-    <div class="container">
-      <section id="main_content">
+
+      </header>
+      <section>
         <p><img src="https://github.com/mbadran/headlights/raw/master/headlights_ss.png" alt="Headlights in Action"></p>
 
 <p>Headlights adds a <code>Bundles</code> [^1] menu to Vim, revealing your bundles (aka.
@@ -91,6 +93,10 @@ user experience</del> quality of life.</p>
 
 <p><code>let g:headlights_debug_mode = 0</code> (Disabled)</p>
 
+<p><code>let g:headlights_run_on_startup = 0</code> (Disabled)</p>
+
+<p><code>let g:headlights_spillover_menus = 0</code> (Disabled)</p>
+
 <h2>Go Deeper</h2>
 
 <p>Refer to the Headlights help document:</p>
@@ -113,8 +119,11 @@ open</code> to reveal the <code>fugitive.vim</code> file as the first result. Yo
       system access, but the trade off is that autoload and ftplugin scripts
       are not revealed until they are needed. (This is Good Enough ™.)</p>
       </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
     </div>
-
-    
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
   </body>
 </html>
