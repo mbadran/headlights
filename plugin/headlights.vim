@@ -1,5 +1,5 @@
 " Headlights - Know thy Bundles.
-" Version: 1.5.2
+" Version: 1.5.3
 " Home: http://mbadran.github.com/headlights/
 " Development: http://github.com/mbadran/headlights
 " Maintainer: Mohammed Badran <http://disentangled.net>
