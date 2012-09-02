@@ -39,6 +39,7 @@ let s:show_load_order = exists("g:headlights_show_load_order") ? g:headlights_sh
 let s:smart_menus = exists("g:headlights_smart_menus") ? g:headlights_smart_menus : 1
 let s:debug_mode = exists("g:headlights_debug_mode") ? g:headlights_debug_mode : 0
 let s:run_on_startup = exists("g:headlights_run_on_startup") ? g:headlights_run_on_startup : 0
+let s:spillover_menus = exists("g:headlights_spillover_menus") ? g:headlights_spillover_menus : 0
 
 let s:menu_root = s:use_plugin_menu ? "Plugin.headlights" : "Bundles"
 
@@ -59,6 +60,7 @@ HL_SHOW_FILES = bool(int(vim.eval("s:show_files")))
 HL_SHOW_LOAD_ORDER = bool(int(vim.eval("s:show_load_order")))
 HL_SMART_MENUS = bool(int(vim.eval("s:smart_menus")))
 HL_DEBUG_MODE = bool(int(vim.eval("s:debug_mode")))
+HL_SPILLOVER = bool(int(vim.eval("s:spillover_menus")))
 
 HL_MENU_ERROR = "Headlights menu error. See the '%s > debug' menu. To enable debug mode, see :help headlights-issues" % HL_MENU_ROOT
 
