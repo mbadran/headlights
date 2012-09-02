@@ -103,14 +103,29 @@ Create menus for load order of plugin files:
 
 Default value: 0
 
-
-                                                  *headlights_smart_menus*
+                                                      *headlights_smart_menus*
 
 Group bundles that share the same root together:
 
     let g:headlights_smart_menus = 1
 
 Default value: 1
+
+                                                   *headlights_run_on_startup*
+
+Attach the menus on GUI startup instead of on cursor hold:
+
+    let g:headlights_run_on_startup = 1
+
+Default value: 0
+
+                                                  *headlights_spillover_menus*
+
+Spillover the menus into alphabetical parent categories:
+
+    let g:headlights_spillover_menus = 1
+
+Default value: 0
 
                                                        *headlights_debug_mode*
 
@@ -182,6 +197,13 @@ hosted at Vim.org:
 
 ==============================================================================
 CHANGELOG                                               *headlights-changelog*
+
+1.5.3
+    - new option to run on GUI startup
+    - revert to flat menus
+    - new option to spillover menus
+    - doc updates
+    - minor code and menu usability improvements
 
 1.5.2
     - prevent headlights from running on GUI startup (faster)
