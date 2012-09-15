@@ -140,7 +140,7 @@ def gen_menus():
 
         # duplicate local buffer menus for convenience
         if hl_bundles[path]["buffer"]:
-            prefix = "%(root)s.⁣⁣›\ buffer.%(name)s." % locals()
+            prefix = "%(root)s.⁣⁣·\ buffer.%(name)s." % locals()
             gen_menu_categories(name, prefix, path, properties)
 
     # sort the menus in alphabetical order
@@ -385,9 +385,9 @@ def get_spillover(name, path):
     name = name.strip()
 
     if hl_bundles[path]["name"].endswith("vimrc"):
-        spillover = "⁣›\ vimrc."
+        spillover = "⁣·\ vimrc."
     elif "/runtime/" in path.lower():
-        spillover = "⁣›\ runtime."
+        spillover = "⁣·\ runtime."
     elif HL_SPILLOVER:
         # use empty chars (looks like space) to move menus to the bottom
         # and exclude vimrc files from buffer local menus (for simplicity)
