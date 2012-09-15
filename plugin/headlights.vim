@@ -241,7 +241,7 @@ function! s:ResetBufferState() " {{{1
   unlet! b:headlights_buffer_updated
 
   try
-    execute "aunmenu " . s:menu_root . ".⁣⁣buffer"
+    execute "aunmenu " . s:menu_root . ".⁣⁣·\\ buffer"
   catch /E329/
   endtry
 endfunction
