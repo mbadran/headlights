@@ -228,9 +228,19 @@ function! s:GetVimCommandOutput(command) " {{{1
   " (try-catch doesn't always work here, for some reason)
   let l:output = ''
 
+  " temporarily switch messages to default locale since HL_SOURCE_LINE relies on it
+  let l:lang = v:lang
+  if match(l:lang, "\\(C$\\|en\\($\\|_\\)\\)") != 0
+    execute "silent language messages C"
+  endif
+
   redir => l:output
     execute "silent verbose " . a:command
   redir END
+
+  if l:lang != v:lang
+    execute "silent language messages " . l:lang
+  endif
 
   return l:output
 endfunction
