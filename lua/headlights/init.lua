@@ -1,9 +1,11 @@
 -- Public API for headlights.nvim
 --
---   require("headlights").setup({ ... })   -- configure
---   require("headlights").open()           -- open the browser (auto-detect UI)
---   require("headlights").open("popup")    -- force floating popup
---   require("headlights").open("buffer")   -- force buffer mode
+--   require("headlights").setup({ ... })
+--   require("headlights").open()                  -- auto UI, all plugins
+--   require("headlights").open("popup")           -- force popup
+--   require("headlights").open("buffer")          -- force buffer (text)
+--   require("headlights").open("buffer", {}, "json")     -- JSON output
+--   require("headlights").open("buffer", {"fug"}, "md")  -- filter + format
 
 local M = {}
 
@@ -13,8 +15,8 @@ local bundler   = require("headlights.bundler")
 local ui        = require("headlights.ui")
 local log       = require("headlights.log")
 
---- Configure the plugin.  Call once from your init.lua / vimrc.
---- @param opts table  see lua/headlights/config.lua for all available keys
+--- Configure the plugin.
+--- @param opts table  see lua/headlights/config.lua
 function M.setup(opts)
   config.setup(opts)
   log.configure(config.options)
@@ -22,10 +24,14 @@ function M.setup(opts)
 end
 
 --- Collect live data and open the appropriate UI.
---- @param force string|nil  "popup" | "buffer" to override auto-detection
-function M.open(force)
+---
+--- @param force   string|nil  "popup" | "buffer"
+--- @param filter  table|nil   list of plugin name substrings (case-insensitive)
+--- @param fmt     string|nil  "text" | "markdown" | "json"  (buffer only)
+function M.open(force, filter, fmt)
   log.clear_perf()
-  log.info("open() called, force=" .. tostring(force))
+  log.info(string.format("open() force=%s filter=%s fmt=%s",
+    tostring(force), vim.inspect(filter or {}), tostring(fmt)))
 
   local ok, err = pcall(function()
     local snap = log.time("snapshot", collector.snapshot)
@@ -34,36 +40,20 @@ function M.open(force)
       return bundler.build_bundles(snap.scripts, snap.commands, snap.mappings)
     end)
 
-    -- Buffer-local commands / mappings → synthetic "·buffer" bundle
+    -- Buffer-local items → synthetic "·buffer (local)" plugin
     local has_buf   = false
     local buf_bundle = {
-      name          = "·buffer",
-      root          = "",
-      scripts       = {},
-      commands      = {},
-      mappings      = {},
-      abbreviations = {},
-      functions     = {},
-      highlights    = {},
+      name = "·buffer (local)", root = "", scripts = {},
+      commands = {}, mappings = {}, abbreviations = {}, functions = {}, highlights = {},
     }
     for name, cmd in pairs(snap.buf_commands) do
       has_buf = true
-      table.insert(buf_bundle.commands, {
-        name       = name,
-        definition = cmd.definition or "",
-        nargs      = cmd.nargs or "0",
-      })
+      table.insert(buf_bundle.commands, { name = name, definition = cmd.definition or "", nargs = cmd.nargs or "0" })
     end
     for mode, maps in pairs(snap.buf_mappings) do
       for _, map in ipairs(maps) do
         has_buf = true
-        table.insert(buf_bundle.mappings, {
-          mode = mode,
-          lhs  = map.lhs,
-          rhs  = map.rhs or "",
-          desc = map.desc or "",
-          sid  = map.sid,
-        })
+        table.insert(buf_bundle.mappings, { mode = mode, lhs = map.lhs, rhs = map.rhs or "", desc = map.desc or "", sid = map.sid })
       end
     end
     if has_buf then
@@ -71,8 +61,32 @@ function M.open(force)
       table.insert(bundles, buf_bundle)
     end
 
-    log.info(string.format("found %d bundle(s)", #bundles))
-    log.time("ui.open", ui.open, bundles, config.options, force)
+    -- Apply plugin name filter
+    if filter and #filter > 0 then
+      local matched = vim.tbl_filter(function(b)
+        for _, f in ipairs(filter) do
+          if b.name:lower():find(f:lower(), 1, true) then return true end
+        end
+        return false
+      end, bundles)
+
+      if #matched == 0 then
+        local names = table.concat(filter, ", ")
+        log.warn("No plugins matched: " .. names)
+        vim.notify("[headlights] No plugins matched: " .. names, vim.log.levels.WARN)
+        return
+      end
+
+      bundles = matched
+      -- Filtered output is always in buffer mode
+      if not force or force == "popup" then force = "buffer" end
+    end
+
+    log.info(string.format("displaying %d plugin(s)", #bundles))
+
+    -- Build final opts for UI (merge format into config options)
+    local ui_opts = vim.tbl_extend("force", config.options, { format = fmt or "text" })
+    log.time("ui.open", ui.open, bundles, ui_opts, force)
   end)
 
   if not ok then

@@ -1,0 +1,313 @@
+*headlights-nvim.txt*   Plugin browser for Neovim        *headlights*
+
+  O  O   headlights.nvim
+  --------------------------------------------------
+  illuminate the footprint of your installed plugins
+
+Author:  mbadran <https://github.com/mbadran>
+License: MIT
+Repo:    https://github.com/mbadran/headlights
+
+==============================================================================
+CONTENTS                                            *headlights-contents*
+
+  1. Introduction ............ |headlights-intro|
+  2. Requirements ............ |headlights-requirements|
+  3. Installation ............ |headlights-installation|
+  4. Quick start ............. |headlights-quickstart|
+  5. Commands ................ |headlights-commands|
+  6. Configuration ........... |headlights-config|
+  7. Popup navigation ........ |headlights-popup|
+  8. Buffer navigation ....... |headlights-buffer|
+  9. Output formats .......... |headlights-formats|
+ 10. Logging & diagnostics ... |headlights-logging|
+ 11. How it works ............ |headlights-internals|
+ 12. Known limitations ........ |headlights-limitations|
+ 13. License ................. |headlights-license|
+
+==============================================================================
+1. INTRODUCTION                                     *headlights-intro*
+
+Every plugin you install leaves a footprint in Neovim: new commands, key
+mappings, abbreviations, functions, highlight groups, and source files. Over
+time, with 20, 50, or 100+ plugins, that footprint becomes impossible to keep
+in your head.
+
+headlights gives you a full audit trail. Open it and see exactly what every
+installed plugin contributes, organised by plugin. No registration required —
+it inspects Neovim's own runtime state automatically.
+
+==============================================================================
+2. REQUIREMENTS                                     *headlights-requirements*
+
+- Neovim >= 0.9
+
+No external dependencies. Works with any plugin manager (lazy.nvim, packer,
+vim-plug, pathogen, manual runtimepath entries, Nix, …) or none at all.
+
+==============================================================================
+3. INSTALLATION                                     *headlights-installation*
+
+lazy.nvim: >lua
+  {
+    "mbadran/headlights",
+    cmd  = { "Headlights", "HeadlightsPopup", "HeadlightsBuffer" },
+    opts = {},
+  }
+<
+
+packer.nvim: >lua
+  use {
+    "mbadran/headlights",
+    config = function() require("headlights").setup({}) end,
+  }
+<
+
+vim-plug (then add to init.lua): >vim
+  Plug 'mbadran/headlights'
+<
+>lua
+  require("headlights").setup({})
+<
+
+Manual: >bash
+  git clone https://github.com/mbadran/headlights \
+    ~/.local/share/nvim/site/pack/plugins/start/headlights
+<
+
+==============================================================================
+4. QUICK START                                      *headlights-quickstart*
+
+  1. Install the plugin (see |headlights-installation|).
+  2. Call setup() in your init.lua (or let lazy.nvim call it via `opts = {}`).
+  3. Open Neovim and run:  >vim
+       :Headlights
+<
+  4. Navigate with j/k, press <CR> to drill in, <BS> to go back, q to close.
+
+Suggested keymaps: >lua
+  vim.keymap.set("n", "<leader>hl", "<cmd>Headlights<cr>",
+    { desc = "Headlights" })
+  vim.keymap.set("n", "<leader>hp", "<cmd>Headlights popup<cr>",
+    { desc = "Headlights popup" })
+  vim.keymap.set("n", "<leader>hb", "<cmd>Headlights buffer<cr>",
+    { desc = "Headlights buffer" })
+<
+
+==============================================================================
+5. COMMANDS                                         *headlights-commands*
+
+                                                    *:Headlights*
+:Headlights [args]
+    Open the plugin browser. Arguments can be combined freely:
+
+    popup           Force floating popup UI
+    buffer          Force buffer UI (default in terminal Neovim)
+    text            Plain text format (default)
+    markdown        Markdown format (buffer only)
+    json            JSON format (buffer only)
+    {name}[,{name}] Filter to plugins whose names contain {name}
+                    (case-insensitive substring). Multiple names
+                    separated by spaces or commas. Always opens buffer.
+
+    Examples: >vim
+      :Headlights                    " auto, all plugins
+      :Headlights popup              " popup, all plugins
+      :Headlights buffer json        " buffer, JSON
+      :Headlights fugitive           " filter to fugitive, buffer
+      :Headlights fugitive,telescope " filter to two plugins
+      :Headlights fug json           " filter + JSON
+<
+                                                    *:HeadlightsPopup*
+:HeadlightsPopup
+    Equivalent to :Headlights popup.
+
+                                                    *:HeadlightsBuffer*
+:HeadlightsBuffer [fmt]
+    Equivalent to :Headlights buffer [fmt].
+    {fmt} is one of: text, markdown, json.
+
+==============================================================================
+6. CONFIGURATION                                    *headlights-config*
+
+Call setup() once from your init.lua: >lua
+  require("headlights").setup({
+    -- options shown with their defaults
+  })
+<
+All options are optional. Omit any you don't want to change.
+
+                                                    *headlights-show_commands*
+show_commands (boolean, default: true)
+    Show user commands defined by each plugin.
+
+                                                    *headlights-show_mappings*
+show_mappings (boolean, default: true)
+    Show key mappings (all modes) defined by each plugin.
+
+                                                    *headlights-show_abbreviations*
+show_abbreviations (boolean, default: false)
+    Show text abbreviations defined by each plugin.
+
+                                                    *headlights-show_functions*
+show_functions (boolean, default: false)
+    Show global Vim functions defined by each plugin.
+
+                                                    *headlights-show_highlights*
+show_highlights (boolean, default: false)
+    Show custom highlight groups defined by each plugin.
+
+                                                    *headlights-show_files*
+show_files (boolean, default: false)
+    Show the source script paths for each plugin.
+
+                                                    *headlights-smart_menus*
+smart_menus (boolean, default: true)
+    Group scripts from the same plugin root into a single entry.
+
+                                                    *headlights-show_load_order*
+show_load_order (boolean, default: false)
+    Prefix plugin names with their script load index.
+
+                                                    *headlights-menu_width*
+menu_width (number, default: 60)
+    Width of the floating popup window in columns.
+
+                                                    *headlights-menu_max_height*
+menu_max_height (number, default: 25)
+    Maximum height of the floating popup window in lines.
+
+                                                    *headlights-log_level*
+log_level (number, default: vim.log.levels.WARN)
+    Minimum level for log output. Use vim.log.levels.DEBUG for verbose
+    output, vim.log.levels.ERROR for silent operation.
+
+                                                    *headlights-log_to_file*
+log_to_file (boolean, default: false)
+    Also write log entries to a file on disk.
+
+                                                    *headlights-log_file*
+log_file (string|nil, default: nil)
+    Absolute path for the log file.
+    nil → stdpath("log") .. "/headlights.log"
+
+==============================================================================
+7. POPUP NAVIGATION                                 *headlights-popup*
+
+The popup shows three levels of navigation:
+
+  Level 1: Plugin list
+  Level 2: Categories for the selected plugin (Commands, Mappings, …)
+  Level 3: Items within the selected category
+
+Key bindings: >
+  j / k          Move cursor down / up
+  <CR>           Select / drill in one level
+  <BS>           Go back one level
+  h / <Left>     Go back one level (alias)
+  q / <Esc>      Close the popup
+<
+
+Selecting a command at Level 3 closes the popup and puts the command name
+on the Vim command line, ready to run. Selecting a file opens it in the
+current window. Selecting a Help entry runs :help <plugin-name>.
+
+==============================================================================
+8. BUFFER NAVIGATION                                *headlights-buffer*
+
+The buffer display opens as a vertical split named headlights://plugins.
+
+Key bindings: >
+  j / k          Normal cursor movement
+  <CR>           On a :Command line — run the command
+                 On a file path line — open the file
+  q / <Esc>      Close the buffer
+  ?              Show help echo
+<
+
+The buffer is read-only. Press q to close it.
+
+==============================================================================
+9. OUTPUT FORMATS                                   *headlights-formats*
+
+Three formats are available for the buffer display:
+
+text (default)
+    Human-readable plain text with Unicode box-drawing characters.
+    Syntax-highlighted in Neovim.
+
+markdown
+    GitHub-flavoured Markdown with tables. Useful for copy-pasting into
+    documentation or GitHub issues.
+
+json
+    Machine-readable JSON. Useful for scripting, analysis, or feeding
+    other tools. Pipe to jq for pretty-printing: >bash
+      nvim --headless -c "Headlights buffer json" -c "wqa!" \
+        2>/dev/null | jq .
+<
+
+==============================================================================
+10. LOGGING AND DIAGNOSTICS                         *headlights-logging*
+
+                                                    *:checkhealth*
+Run :checkhealth headlights to see:
+
+  - Neovim version compatibility
+  - Configuration summary
+  - Default UI mode
+  - Number of loaded scripts and commands visible
+  - Performance timings from the last :Headlights run
+
+Enable verbose logging: >lua
+  require("headlights").setup({
+    log_level   = vim.log.levels.DEBUG,
+    log_to_file = true,
+  })
+<
+
+Find the log file: >vim
+  :lua print(require("headlights.log").log_file_path())
+<
+
+==============================================================================
+11. HOW IT WORKS                                    *headlights-internals*
+
+1. Snapshot: vim.fn.getscriptinfo() returns every loaded script with a
+   numeric `sid`. nvim_get_commands() and nvim_get_keymap() return all
+   commands and mappings, each tagged with the `script_id` / `sid` of the
+   script that defined them. All native Neovim APIs, no plugin manager
+   dependency.
+
+2. Attribution: commands are matched to their source script by comparing
+   cmd.script_id == script.sid; mappings via map.sid == script.sid.
+
+3. Grouping: scripts are clustered into plugins by detecting plugin-manager
+   root directories in the path (plugged/, lazy/, bundle/, start/, opt/).
+   Scripts from the same root directory become one plugin entry.
+
+4. UI: GUI frontends (Neovide, nvui, nvim-qt, …) get an interactive floating
+   popup. Terminal Neovim gets a formatted scratch buffer.
+
+==============================================================================
+12. KNOWN LIMITATIONS                               *headlights-limitations*
+
+- Plugins that are lazy-loaded and not yet triggered are invisible (their
+  scripts haven't been sourced yet). See GitHub issue #30.
+
+- Abbreviations, functions, and highlight groups are collected but not yet
+  attributed to individual plugins — Neovim doesn't expose script_id for
+  these. See GitHub issue #25.
+
+- Autocommands are not yet browsed. See GitHub issue #26.
+
+- Scripts in non-standard plugin directories (Nix store, custom rtp paths)
+  may be grouped unexpectedly. See GitHub issue #29.
+
+==============================================================================
+13. LICENSE                                         *headlights-license*
+
+MIT License. Copyright (c) 2024 mbadran.
+https://github.com/mbadran/headlights/blob/main/LICENSE
+
+vim:tw=78:ts=8:ft=help:norl:
