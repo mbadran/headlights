@@ -1,8 +1,16 @@
 *headlights-nvim.txt*   Plugin browser for Neovim        *headlights*
 
-  O  O   headlights.nvim
-  --------------------------------------------------
-  illuminate the footprint of your installed plugins
+           \           /           \           /
+            \   ###   /             \   ###   /
+             \ ##*## /               \ ##*## /
+       -------*=====*----------------*=====*-------
+             / ##*## \               / ##*## \
+            /   ###   \             /   ###   \
+           /           \           /           \
+
+                       headlights.nvim
+              illuminate the footprint of your
+                    installed plugins
 
 Author:  mbadran <https://github.com/mbadran>
 License: MIT
@@ -157,6 +165,17 @@ show_functions (boolean, default: false)
 show_highlights (boolean, default: false)
     Show custom highlight groups defined by each plugin.
 
+                                                    *headlights-show_autocmds*
+show_autocmds (boolean, default: false)
+    Show autocommands. Attributed to a plugin when the augroup name
+    contains the plugin name (case-insensitive substring); otherwise
+    listed under the synthetic "·orphans (unattributed)" bundle.
+
+                                                    *headlights-show_signs*
+show_signs (boolean, default: false)
+    Show signs defined via sign_define(). Attributed by sign-name and
+    texthl substring match; otherwise listed under "·orphans".
+
                                                     *headlights-show_files*
 show_files (boolean, default: false)
     Show the source script paths for each plugin.
@@ -168,6 +187,22 @@ smart_menus (boolean, default: true)
                                                     *headlights-show_load_order*
 show_load_order (boolean, default: false)
     Prefix plugin names with their script load index.
+
+                                                    *headlights-extra_plugin_dirs*
+extra_plugin_dirs (table, default: {})
+    A list of additional Lua patterns used to recognise plugin directories
+    that the built-in matchers don't know about (e.g. Nix store paths,
+    custom runtimepath layouts). Each pattern must capture two groups:
+    the bundle root path and the bundle folder name.
+
+    Example: >lua
+      require("headlights").setup({
+        extra_plugin_dirs = {
+          "^(/nix/store/[^/]+%-([^/]+))/",
+          "^(.*/myplugins/([^/]+))/",
+        },
+      })
+<
 
                                                     *headlights-menu_width*
 menu_width (number, default: 60)
@@ -295,14 +330,27 @@ Find the log file: >vim
 - Plugins that are lazy-loaded and not yet triggered are invisible (their
   scripts haven't been sourced yet). See GitHub issue #30.
 
-- Abbreviations, functions, and highlight groups are collected but not yet
-  attributed to individual plugins — Neovim doesn't expose script_id for
-  these. See GitHub issue #25.
+- Lazy-loaded plugins remain invisible until they are loaded — see GitHub
+  issue #30 (planned via plugin-manager metadata).
 
 - Autocommands are not yet browsed. See GitHub issue #26.
 
 - Scripts in non-standard plugin directories (Nix store, custom rtp paths)
   may be grouped unexpectedly. See GitHub issue #29.
+
+==============================================================================
+                                                    *headlights-cli*
+CLI DRIVER
+
+A non-interactive CLI is shipped at `bin/headlights` (in the plugin repo).
+It runs the same collector → bundler → renderer pipeline as |:Headlights|
+and writes the result to stdout — useful for scripting, smoke tests, and
+container validation: >bash
+  bin/headlights                    # plain text
+  bin/headlights --format=json      # machine-readable
+  bin/headlights fugitive,telescope # filter
+<
+For container-based testing instructions see TESTING.md in the repo root.
 
 ==============================================================================
 13. LICENSE                                         *headlights-license*

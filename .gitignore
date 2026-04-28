@@ -4,3 +4,10 @@ doc/tags
 plugin/.DS_Store
 plugin/.ropeproject/
 .ropeproject/
+
+# mini.test (cloned by `make test-deps`)
+tests/.deps/
+
+# CLI / smoke artefacts
+/tmp/headlights*.log
+/tmp/headlights-smoke.stderr

@@ -15,7 +15,7 @@ local MODE_LABELS = {
   s = "Select",  o = "Op-pend", c = "Command", t = "Terminal",
 }
 
-local CATEGORIES = { "commands", "mappings", "abbreviations", "functions", "highlights", "files" }
+local CATEGORIES = { "commands", "mappings", "abbreviations", "functions", "highlights", "autocmds", "signs", "files" }
 
 local CATEGORY_LABELS = {
   commands      = "Commands",
@@ -23,6 +23,8 @@ local CATEGORY_LABELS = {
   abbreviations = "Abbreviations",
   functions     = "Functions",
   highlights    = "Highlights",
+  autocmds      = "Autocommands",
+  signs         = "Signs",
   files         = "Files",
 }
 
@@ -33,6 +35,8 @@ local CATEGORY_OPTION = {
   abbreviations = "show_abbreviations",
   functions     = "show_functions",
   highlights    = "show_highlights",
+  autocmds      = "show_autocmds",
+  signs         = "show_signs",
   files         = "show_files",
 }
 
@@ -133,6 +137,21 @@ function M._item_list_lines(bundle, category, _opts)
       table.insert(lines, "  " .. hl)
       table.insert(entries, { type = "highlight", hl = hl })
     end
+  elseif category == "autocmds" then
+    for _, ac in ipairs(bundle.autocmds or {}) do
+      local pat  = ac.pattern or ""
+      local grp  = ac.group_name or ac.group or ""
+      local desc = ac.desc or ""
+      table.insert(lines, string.format("  %-12s %-22s [%s] %s",
+        ac.event or "?", pat, grp, desc))
+      table.insert(entries, { type = "autocmd", autocmd = ac })
+    end
+  elseif category == "signs" then
+    for _, sg in ipairs(bundle.signs or {}) do
+      table.insert(lines, "  " .. (sg.name or "?")
+        .. (sg.text and (" " .. sg.text) or ""))
+      table.insert(entries, { type = "sign", sign = sg })
+    end
   elseif category == "files" then
     for _, s in ipairs(bundle.scripts) do
       table.insert(lines, "  " .. s.name)
@@ -159,11 +178,12 @@ end
 
 local function make_title(bundle, category)
   if not bundle then
-    return " Headlights "
+    return " Headlights › Plugins "
   elseif not category then
-    return " Headlights › " .. bundle.name .. " "
+    return " Headlights › Plugins › " .. bundle.name .. " "
   else
-    return " Headlights › " .. bundle.name .. " › " .. (CATEGORY_LABELS[category] or category) .. " "
+    return " Headlights › Plugins › " .. bundle.name .. " › "
+        .. (CATEGORY_LABELS[category] or category) .. " "
   end
 end
 

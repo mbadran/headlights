@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# headlights — CLI driver for headlights.nvim.
+#
+# Runs Neovim headlessly, loads only this plugin, captures a live snapshot,
+# and writes the formatted output to stdout. Useful for:
+#
+#   * CI / smoke tests   (bin/headlights >/dev/null && echo OK)
+#   * Scripting          (bin/headlights --format=json | jq '.plugins[].name')
+#   * Docker validation  (no TUI required)
+#
+# Usage:
+#   bin/headlights                      text format, all plugins
+#   bin/headlights --format=json
+#   bin/headlights --format=markdown
+#   bin/headlights fugitive             filter (case-insensitive substring)
+#   bin/headlights fugitive,telescope   multi-filter
+#   bin/headlights --rtp=/path/to/plugin1,/path/to/plugin2  add extra rtp entries
+#
+# Environment:
+#   NVIM           override the nvim binary (default: nvim)
+#   HEADLIGHTS_DEBUG=1   enable debug logging
+
+set -eu
+
+NVIM="${NVIM:-nvim}"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Argument parsing — keep it shell-portable, no getopt.
+fmt="text"
+filter=""
+extra_rtp=""
+positional=()
+
+for arg in "$@"; do
+  case "$arg" in
+    --format=*)  fmt="${arg#--format=}" ;;
+    --rtp=*)     extra_rtp="${arg#--rtp=}" ;;
+    --json)      fmt="json" ;;
+    --markdown)  fmt="markdown" ;;
+    --text)      fmt="text" ;;
+    -h|--help)
+      sed -n '2,/^set/p' "$0" | sed -n '2,/^$/p' | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    --*)         echo "unknown flag: $arg" >&2; exit 64 ;;
+    *)           positional+=("$arg") ;;
+  esac
+done
+
+if [ "${#positional[@]}" -gt 0 ]; then
+  filter="$(IFS=','; echo "${positional[*]}")"
+fi
+
+case "$fmt" in
+  text|markdown|json) ;;
+  *) echo "unsupported --format: $fmt (expected text|markdown|json)" >&2; exit 64 ;;
+esac
+
+# Run the headless Lua entrypoint via nvim -l.
+# `-l` runs Lua scripts, suppresses TUI, and propagates exit codes.
+# We pass arguments via env vars rather than _G.arg to keep the interface
+# explicit and easy to test.
+exec env \
+  HEADLIGHTS_FMT="$fmt" \
+  HEADLIGHTS_FILTER="$filter" \
+  HEADLIGHTS_EXTRA_RTP="$extra_rtp" \
+  HEADLIGHTS_REPO="$REPO_ROOT" \
+  HEADLIGHTS_DEBUG="${HEADLIGHTS_DEBUG:-}" \
+  "$NVIM" --clean --headless -l "$REPO_ROOT/bin/headlights.lua"

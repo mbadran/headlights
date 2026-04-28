@@ -23,6 +23,14 @@ function M.setup(opts)
   log.info("setup() complete")
 end
 
+local function empty_bundle(name)
+  return {
+    name = name, root = "", scripts = {},
+    commands = {}, mappings = {}, abbreviations = {},
+    functions = {}, highlights = {}, autocmds = {}, signs = {},
+  }
+end
+
 --- Collect live data and open the appropriate UI.
 ---
 --- @param force   string|nil  "popup" | "buffer"
@@ -36,16 +44,21 @@ function M.open(force, filter, fmt)
   local ok, err = pcall(function()
     local snap = log.time("snapshot", collector.snapshot)
 
-    local bundles = log.time("build_bundles", function()
-      return bundler.build_bundles(snap.scripts, snap.commands, snap.mappings)
+    local bundles, extras = log.time("build_bundles", function()
+      return bundler.build_bundles(
+        snap.scripts, snap.commands, snap.mappings,
+        config.options.extra_plugin_dirs,
+        {
+          abbreviations = snap.abbreviations,
+          highlights    = snap.highlights,
+          autocmds      = snap.autocmds,
+          signs         = snap.signs,
+        })
     end)
 
     -- Buffer-local items → synthetic "·buffer (local)" plugin
-    local has_buf   = false
-    local buf_bundle = {
-      name = "·buffer (local)", root = "", scripts = {},
-      commands = {}, mappings = {}, abbreviations = {}, functions = {}, highlights = {},
-    }
+    local buf_bundle = empty_bundle("·buffer (local)")
+    local has_buf = false
     for name, cmd in pairs(snap.buf_commands) do
       has_buf = true
       table.insert(buf_bundle.commands, { name = name, definition = cmd.definition or "", nargs = cmd.nargs or "0" })
@@ -59,6 +72,15 @@ function M.open(force, filter, fmt)
     if has_buf then
       table.sort(buf_bundle.commands, function(a, b) return a.name < b.name end)
       table.insert(bundles, buf_bundle)
+    end
+
+    -- Unattributed autocmds / signs → synthetic "·orphans" bundle so they
+    -- aren't silently dropped.
+    if extras and ((#extras.autocmds > 0) or (#extras.signs > 0)) then
+      local orphan = empty_bundle("·orphans (unattributed)")
+      orphan.autocmds = extras.autocmds
+      orphan.signs    = extras.signs
+      table.insert(bundles, orphan)
     end
 
     -- Apply plugin name filter
