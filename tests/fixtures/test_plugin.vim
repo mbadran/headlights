@@ -11,3 +11,13 @@ nnoremap <silent> <leader>HLfx  :echo 'headlights_fixture_normal_map'<CR>
 inoremap <silent> <C-HLfx>      <Esc>:echo 'headlights_fixture_insert_map'<CR>a
 
 iabbrev  HLfxabrv                headlights_fixture_abbreviation_value
+
+" Highlight + autocmd + sign exercise the wider attribution paths.
+highlight HeadlightsFixtureHL    guifg=#abcabc
+
+augroup HeadlightsFixtureGroup
+  autocmd!
+  autocmd BufRead *.headlights_fixture echo 'headlights_fixture_autocmd'
+augroup END
+
+call sign_define('HeadlightsFixtureSign', { 'text': '◉', 'texthl': 'HeadlightsFixtureHL' })

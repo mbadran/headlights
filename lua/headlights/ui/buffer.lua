@@ -8,13 +8,28 @@ local M = {}
 local BUF_NAME = "headlights://plugins"
 local NS = vim.api.nvim_create_namespace("headlights_buf")
 
-local LOGO = "  ◉  ◉   headlights.nvim"
-local LOGO_ASCII = "  O  O   headlights.nvim"   -- for help file / plain text
+-- Compact ASCII-art header used inside the buffer. The full elaborate art
+-- lives in README.md / doc/headlights-nvim.txt; the buffer keeps a tighter
+-- two-line variant so it doesn't dominate the view.
+local LOGO_LINES = {
+  "  ╭─◉═──══════ ◉─╮     headlights.nvim",
+  "  ╰─╯           ╰─╯    illuminate the footprint of your plugins",
+}
+local LOGO_LINES_ASCII = {
+  "  /-O==========O-\\     headlights.nvim",
+  "  \\-/          \\-/    illuminate the footprint of your plugins",
+}
 
 local MODE_LABELS = {
   n = "n", i = "i", v = "v", x = "x",
   s = "s", o = "o", c = "c", t = "t",
 }
+
+local function logo_for_terminal()
+  -- Fall back to ASCII when the terminal can't render Unicode reliably.
+  if vim.o.encoding ~= "utf-8" then return LOGO_LINES_ASCII end
+  return LOGO_LINES
+end
 
 --------------------------------------------------------------------------
 -- Plain-text renderer (testable, no Vim API calls)
@@ -27,8 +42,8 @@ function M.render_lines(bundles, opts)
   opts = opts or {}
   local lines = {}
 
-  table.insert(lines, LOGO)
-  table.insert(lines, string.rep("─", 50))
+  for _, l in ipairs(logo_for_terminal()) do table.insert(lines, l) end
+  table.insert(lines, string.rep("─", 76))
   table.insert(lines, "  q/<Esc> Close   <CR> Execute/Open   ? Help")
   table.insert(lines, "")
 
@@ -106,6 +121,27 @@ function M.render_lines(bundles, opts)
       if hl ~= "    " then table.insert(lines, hl) end
     end
 
+    if opts.show_autocmds and #(bundle.autocmds or {}) > 0 then
+      has_content = true
+      table.insert(lines, string.format("  Autocommands (%d):", #bundle.autocmds))
+      for _, ac in ipairs(bundle.autocmds) do
+        local pat  = ac.pattern or ""
+        local grp  = ac.group_name or ac.group or ""
+        local desc = (ac.desc and ac.desc ~= "") and ("  # " .. ac.desc) or ""
+        table.insert(lines, string.format("    %-12s %-22s [%s]%s",
+          ac.event or "?", pat, grp, desc))
+      end
+    end
+
+    if opts.show_signs and #(bundle.signs or {}) > 0 then
+      has_content = true
+      table.insert(lines, string.format("  Signs (%d):", #bundle.signs))
+      for _, sg in ipairs(bundle.signs) do
+        table.insert(lines, string.format("    %-22s text=%s texthl=%s",
+          sg.name or "?", tostring(sg.text or ""), tostring(sg.texthl or "")))
+      end
+    end
+
     if opts.show_files and #bundle.scripts > 0 then
       has_content = true
       table.insert(lines, string.format("  Scripts (%d):", #bundle.scripts))
@@ -136,7 +172,7 @@ function M.render_markdown(bundles, opts)
   local lines = {}
   local function ln(s) table.insert(lines, s or "") end
 
-  ln("# headlights.nvim — Plugin Browser")
+  ln("# headlights.nvim — Plugins")
   ln()
   ln(string.format("*Generated %s · Neovim %s*", os.date("%Y-%m-%d"), tostring(vim.version())))
   ln()
@@ -228,6 +264,12 @@ function M.render_json(bundles, opts)
     if opts.show_highlights then
       entry.highlights = bundle.highlights
     end
+    if opts.show_autocmds then
+      entry.autocmds = bundle.autocmds
+    end
+    if opts.show_signs then
+      entry.signs = bundle.signs
+    end
     if opts.show_files then
       entry.scripts = vim.tbl_map(function(s)
         return { sid = s.sid, name = s.name, autoload = s.autoload == 1 }
@@ -270,7 +312,7 @@ local function build_highlights(lines)
   local hls = {}
   for i, line in ipairs(lines) do
     local l = i - 1
-    if line:match("^  ◉") or line:match("^  O") then
+    if line:match("^  ╭") or line:match("^  /") or line:find("headlights%.nvim") then
       table.insert(hls, { l, 0, #line, "Title" })
     elseif line:match("^──") then
       local ns, ne = line:find("[%w%-%._◉]+", 5)

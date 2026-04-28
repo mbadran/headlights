@@ -17,24 +17,25 @@ Legend: ✅ supported · 🔶 partial / requires config · ❌ not supported · 
 | **Resource types** |
 | Commands | ✅ | ❌ | ✅ (flat) | ❌ | ✅ | ❌ |
 | Key mappings (all modes) | ✅ | ✅ | ✅ (flat) | ❌ | ✅ | ✅ |
-| Abbreviations | ✅ (collected) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Functions | ✅ (collected) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Highlight groups | ✅ (collected) | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Autocommands | 🗓 v0.2 | ❌ | ✅ (flat) | ❌ | ✅ | ❌ |
+| Abbreviations | ✅ (attributed) | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Functions | ✅ (attributed) | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Highlight groups | ✅ (attributed) | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Autocommands | ✅ | ❌ | ✅ (flat) | ❌ | ✅ | ❌ |
+| Signs | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Source file list | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | Plugin load times | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Plugin version / author | 🗓 v0.3 | ❌ | ❌ | ✅ | ❌ | ❌ |
+| Plugin version / author | 🗓 v0.4 | ❌ | ❌ | ✅ | ❌ | ❌ |
 | LSP clients | 🗓 v2 | ❌ | ✅ | ❌ | ❌ | ❌ |
 | Tree-sitter parsers | 🗓 v2 | ❌ | ✅ | ❌ | ❌ | ❌ |
 | **UI** |
 | Floating popup | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Persistent buffer display | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | Hierarchical drill-down | ✅ | ✅ (by prefix) | ❌ | ✅ | ❌ | ❌ |
-| Fuzzy search | 🗓 v0.4 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Fuzzy search | 🗓 v0.5 | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Execute command from UI | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Open source file from UI | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | **Integration** |
-| Telescope extension | 🗓 v0.4 | native | native | native | ✅ | ✅ |
+| Telescope extension | 🗓 v0.5 | native | native | native | ✅ | ✅ |
 | fzf-lua support | 🗓 | ❌ | ❌ | 🔶 | ✅ | ❌ |
 | **Health & observability** |
 | `:checkhealth` integration | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
@@ -103,9 +104,7 @@ menu bar only.
 
 | Priority | Feature | Rationale |
 |----------|---------|-----------|
-| High | Fuzzy search (Telescope extension) | All major competitors have it |
-| High | Abbreviation / function attribution | Collected but not yet linked to bundles |
-| Medium | Autocommand browsing | legendary.nvim advantage; useful for debugging |
-| Medium | Lazy-loaded plugin awareness | lazy.nvim advantage |
-| Low | Plugin metadata (version, author) | lazy.nvim advantage |
-| Low | LSP / Tree-sitter info | telescope advantage |
+| High | Fuzzy search (Telescope / fzf-lua / mini.pick) | All major competitors have it |
+| High | Lazy-loaded plugin awareness | lazy.nvim advantage |
+| Medium | Plugin metadata (version, author, load time) | lazy.nvim advantage |
+| Low | LSP / Tree-sitter / DAP info | telescope advantage |

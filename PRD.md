@@ -108,8 +108,8 @@ are properly attributed.  Uses `:Headlights` + `:checkhealth headlights`.
 
 | Milestone | Target content |
 |-----------|---------------|
-| v0.1 (current) | F-01 through F-13 |
-| v0.2 | F-14, F-15 (abbrev/autocmd attribution) |
-| v0.3 | F-16, F-17 (lazy-aware, metadata) |
-| v0.4 | F-18 (Telescope extension) |
+| v0.1 | F-01 through F-13 — initial Lua rewrite |
+| v0.2 (current) | Test-framework migration to mini.test, CLI driver, Docker test env, F-14 (full abbrev/function/highlight attribution), F-15 (autocommand browsing), sign browsing, `extra_plugin_dirs`, "Plugins" UX rename, session routines |
+| v0.3 | F-16 (lazy-aware) |
+| v0.4 | F-17 (plugin metadata), F-18 (Telescope / fzf-lua / mini.pick fuzzy search) |
 | v1.0 | Stable API, complete docs, full test suite |

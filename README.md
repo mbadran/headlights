@@ -1,12 +1,21 @@
 ```
-  ◉  ◉   headlights.nvim
-  ─────────────────────────────────────────────────
-  illuminate the footprint of your installed plugins
+            ╲           ╱           ╲           ╱
+             ╲   ░▒▓   ╱             ╲   ░▒▓   ╱
+              ╲ ░░▓▓░ ╱               ╲ ░░▓▓░ ╱
+       ────────●═════●─────────────────●═════●────────
+              ╱ ░░▓▓░ ╲               ╱ ░░▓▓░ ╲
+             ╱   ░▒▓   ╲             ╱   ░▒▓   ╲
+            ╱           ╲           ╱           ╲
+
+                            headlights.nvim
+                  illuminate the footprint of your
+                         installed plugins
 ```
 
 [![CI](https://github.com/mbadran/headlights/actions/workflows/ci.yml/badge.svg)](https://github.com/mbadran/headlights/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Neovim ≥ 0.9](https://img.shields.io/badge/Neovim-%3E%3D%200.9-blueviolet?logo=neovim&logoColor=white)](https://neovim.io)
+[![Version](https://img.shields.io/badge/Version-0.2.0-2ea043)](CHANGELOG.md)
 
 ---
 
@@ -35,6 +44,8 @@ For every loaded plugin:
 | **Abbreviations** | `i  teh → the` |
 | **Functions** | `fugitive#Git()` |
 | **Highlight groups** | `GitSignsAdd`, `TelescopePrompt` |
+| **Autocommands** | `BufRead *.go [LspAttach]` |
+| **Signs** | `GitSignsAdd ▎`, `DiagnosticSignError ✘` |
 | **Source files** | `~/.local/share/nvim/lazy/vim-fugitive/plugin/fugitive.vim` |
 
 All attributed to their source plugin using Neovim's native `script_id` API —
@@ -68,7 +79,8 @@ Formatted scratch buffer in a vsplit. Default in terminal Neovim.
 Supports plain text, Markdown, and JSON output.
 
 ```
-  ◉  ◉   headlights.nvim
+  ╭─◉═──══════ ◉─╮     headlights.nvim
+  ╰─╯           ╰─╯    illuminate the footprint of your plugins
   ──────────────────────────────────────────────────
   q/<Esc> Close   <CR> Execute/Open   ? Help
 
@@ -163,6 +175,8 @@ require("headlights").setup({
   show_abbreviations = false,
   show_functions     = false,
   show_highlights    = false,
+  show_autocmds      = false,
+  show_signs         = false,
   show_files         = false,
 
   -- UI
@@ -170,6 +184,13 @@ require("headlights").setup({
   show_load_order    = false,  -- prefix names with load index
   menu_width         = 60,     -- popup width (columns)
   menu_max_height    = 25,     -- popup max height (lines)
+
+  -- Plugin discovery — extra Lua patterns for non-standard layouts.
+  -- Each pattern must capture (root_path, plugin_folder_name).
+  extra_plugin_dirs  = {
+    -- "^(/nix/store/[^/]+%-([^/]+))/",  -- Nix store
+    -- "^(.*/myplugins/([^/]+))/",       -- custom rtp directory
+  },
 
   -- Logging & diagnostics
   log_level          = vim.log.levels.WARN,  -- DEBUG|INFO|WARN|ERROR
@@ -271,10 +292,12 @@ JSON example:
 | Gap | Tracking |
 |-----|----------|
 | Unloaded lazy plugins invisible | [#30](https://github.com/mbadran/headlights/issues/30) |
-| Abbreviations/functions/highlights not attributed to plugins | [#25](https://github.com/mbadran/headlights/issues/25) |
-| No autocommand browsing | [#26](https://github.com/mbadran/headlights/issues/26) |
-| No fuzzy search | [#31](https://github.com/mbadran/headlights/issues/31) |
-| Non-standard plugin dir grouping | [#29](https://github.com/mbadran/headlights/issues/29) |
+| No fuzzy search (Telescope / fzf-lua / mini.pick / snacks) | [#31](https://github.com/mbadran/headlights/issues/31) |
+| Plugin manager metadata (version, load time) | [#32](https://github.com/mbadran/headlights/issues/32) |
+
+Function/abbrev/highlight attribution, autocommand + sign browsing, and
+`extra_plugin_dirs` all shipped in v0.2.0 — see
+[CHANGELOG.md](CHANGELOG.md).
 
 See [MATRIX.md](MATRIX.md) for a full comparison with similar tools.
 
@@ -283,15 +306,36 @@ See [MATRIX.md](MATRIX.md) for a full comparison with similar tools.
 ## Running tests
 
 ```bash
-make test                                          # full suite
-make test-file FILE=tests/headlights/bundler_spec.lua
-PLENARY=/path/to/plenary.nvim make test           # custom plenary path
+make smoke                              # single end-to-end smoke test
+make test                               # full mini.test suite
+make test-file F=tests/test_bundler.lua # one spec file
+make docker-test                        # everything inside Ubuntu 24.04
 ```
 
-Tests include unit tests, live API tests, and integration tests that source a
-real Vim script fixture to verify end-to-end plugin discovery and attribution.
+Tests use [`nvim-mini/mini.test`](https://github.com/nvim-mini/mini.test)
+(replacing plenary; see [TESTING.md](TESTING.md) for the trade-off
+write-up). CI runs the smoke test followed by the full suite on Neovim
+**stable** and **nightly** for every push and pull request.
 
-CI runs on every push against Neovim **stable** and **nightly**.
+For container-based, headless, or remote-host testing — including a
+`bin/headlights` CLI driver that prints the snapshot to stdout — see
+[**TESTING.md**](TESTING.md).
+
+---
+
+## CLI driver
+
+A non-interactive CLI is included for scripting, smoke tests, and validating
+the plugin without launching the TUI:
+
+```bash
+bin/headlights                                   # plain text
+bin/headlights --format=json | jq '.plugins[].name'
+bin/headlights fugitive,telescope                # filter
+```
+
+It runs the same pipeline as `:Headlights` under the hood and obeys the same
+configuration. See [TESTING.md](TESTING.md#3-the-cli-driver--binheadlights).
 
 ---
 
